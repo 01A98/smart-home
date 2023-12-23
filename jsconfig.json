@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "noEmit": false,
+    "checkJs": true,
+    "strict": true,
+    "lib": ["dom", "ES6"],
+    "declaration": true,
+    "outDir": "./static/types",
+    "emitDeclarationOnly": true
+  },
+  "include": ["./static/**/*.js"],
+  "verbose": true
+}
