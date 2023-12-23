@@ -1,32 +1,28 @@
-{% extends "base.html" %} {% block content %} {% from
-'macros/bulb-details.jinja' import bulb_details %}
-<section
-  class="w-full h-full bg-white dark:bg-gray-900 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
->
-  <div
-    class="py-8 px-4 mx-auto max-w-screen-xl flex flex-col text-center lg:py-16 z-10 relative"
-  >
-    <h1
-      class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
-    >
-      Smart home dashboard
-    </h1>
-    {% if not error %} {% for bulb in info_result %}
-    <div class="flex flex-col mb-8 justify-center items-center">
-      <h3
-        class="text-3xl font-extrabold leading-none tracking-tight text-gray-700 md:text-4xl dark:text-gray-200"
-      >
-        Bulb
-      </h3>
-      {{ bulb_details(bulb) }}
+{% extends "base.html" %} {% block content %} {% from 'macros/bulb-details.html'
+import bulb_details %}
+<main class="w-full h-screen">
+  <div id="app"></div>
+  <script type="module" src="{{ js_file }}"></script>
+  <section
+    class="w-full h-full bg-white dark:bg-gray-900 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]">
+    <div class="py-8 px-4 mx-auto max-w-screen-xl flex flex-col text-center lg:py-16 z-10 relative">
+      <h1
+        class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
+        Smart home dashboard
+      </h1>
+      {% if not error %} {% for bulb in info_result %}
+      <div class="flex flex-col mb-8 justify-center items-center">
+        <h3 class="text-3xl font-extrabold leading-none tracking-tight text-gray-700 md:text-4xl dark:text-gray-200">
+          Bulb
+        </h3>
+        {{ bulb_details(bulb) }}
+      </div>
+      {% include "components/light-toggle.html" %} {% endfor %} {% else %}
+      <p class="text-lg font-normal text-gray-500 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-200">
+        {{ error }}
+      </p>
+      {% endif %}
     </div>
-    {% include "components/light-toggle.html" %} {% endfor %} {% else %}
-    <p
-      class="text-lg font-normal text-gray-500 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-200"
-    >
-      {{ error }}
-    </p>
-    {% endif %}
-  </div>
-</section>
+  </section>
+</main>
 {% endblock content %}

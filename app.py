@@ -1,18 +1,26 @@
 import asyncio
 import json
+from glob import glob
+
 from sanic import Request, Sanic
 from sanic_ext import render
 
-from wiz import IP, MESSAGES, PORT, get_transport, parse_bulb_response
+from config import PAGES, Page
 from context import PageContext
-from config import PAGES
+from wiz import IP, MESSAGES, PORT, get_transport, parse_bulb_response
 
 app = Sanic(__name__)
-app.static("/static", "./static")
+app.static("/public", "./public")
+
+
+def get_js_file(page: Page):
+    html_path = page.file_path
+    js_glob_path = "public" + "/" + html_path.replace(".html", ".*.js")
+    return glob(js_glob_path)[0]
 
 
 @app.get("/")
-@app.ext.template("pages/home.html")
+@app.ext.template(PAGES.HOME.file_path)
 async def home(request: Request):
     error, result = await send_message_to_wiz(MESSAGES["INFO"])
     context = PageContext(current_page=PAGES.HOME).model_dump()
@@ -20,7 +28,7 @@ async def home(request: Request):
 
     loop = asyncio.get_event_loop()
     response_future = loop.create_future()
-    transport = await get_transport(asyncio.get_event_loop(), response_future)
+    transport = await get_transport(asyncio.get_event_loop(), response_future, ip=IP)
     transport.sendto(b"hello world")
     response_message, _addr = await asyncio.wait_for(
         asyncio.shield(response_future), timeout=5
@@ -29,7 +37,12 @@ async def home(request: Request):
 
     return await render(
         headers={"HX-Trigger": json.dumps({"navigating-to-page": PAGES.HOME.name})},
-        context={"error": error, "info_result": [result], **context},
+        context={
+            "error": error,
+            "info_result": [result],
+            "js_file": get_js_file(PAGES.HOME),
+            **context,
+        },
     )
 
 

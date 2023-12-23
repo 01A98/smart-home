@@ -1,0 +1,26 @@
+{% macro bulb_details(bulb) %}
+<details class="[&_svg#triangle]:open:rotate-0 cursor-pointer mt-1">
+  <summary class="flex cursor-pointer list-none items-center gap-1">
+    <div>
+      <svg id="triangle" class="-rotate-90 transform text-blue-700 transition-all duration-300" fill="none" height="20"
+        width="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        viewBox="0 0 24 24">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+    <p class="text-gray-800 dark:text-white">Details</p>
+  </summary>
+  <ul class="space-y-2 text-left text-gray-500 dark:text-gray-400">
+    {% for key, value in bulb.items() %}
+    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+      <div class="flex flex-col">
+        <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">
+          {{ key }}
+        </dt>
+        <dd class="text-lg font-semibold">{{ value }}</dd>
+      </div>
+    </dl>
+    {% endfor %}
+  </ul>
+</details>
+{% endmacro %}
