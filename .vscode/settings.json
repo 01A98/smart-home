@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "alpinejs",
         "htmx",
         "pydantic",
         "Sanic"
@@ -10,5 +11,10 @@
         "jinja-html": "html",
         "javascript": "javascript",
         "css": "css"
-    }
+    },
+    "files.associations": {
+        "*.html": "jinja-html"
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true
 }

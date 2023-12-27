@@ -1,8 +1,6 @@
 {
     "version": "1.0.0",
-    "files": [
-        "templates/*"
-    ],
+    "type": "module",
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
@@ -12,22 +10,20 @@
         "test": "npm run lint && npm run build"
     },
     "dependencies": {
-        "htmx.org": "^1.9.10",
+        "alpinejs": "^3.13.3",
         "tailwindcss": "^3.3.5"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-node-resolve": "^15.2.3",
-        "@rollup/plugin-replace": "^5.0.5",
         "@rollup/plugin-terser": "^0.4.4",
-        "@rollup/plugin-url": "^8.0.2",
+        "@types/alpinejs": "^3.13.5",
         "autoprefixer": "^10.4.2",
         "pm2": "^5.3.0",
         "postcss": "^8.3.11",
         "prettier": "^3.0.3",
         "prettier-plugin-tailwindcss": "^0.5.6",
         "rollup": "^4.9.1",
-        "rollup-plugin-generate-html-template": "^1.7.0",
         "rollup-plugin-peer-deps-external": "^2.2.4",
         "rollup-plugin-typescript2": "^0.36.0",
         "typescript": "^5.2.2"

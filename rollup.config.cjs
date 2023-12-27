@@ -13,63 +13,77 @@ const externalDeps = {
   ...packageJson.devDependencies,
 };
 
-const tsFiles = fs
-  .readdirSync("templates/pages")
+const TEMPLATE_ROOT_DIR = "templates";
+const TEMPLATE_PAGES_DIR = path.join(TEMPLATE_ROOT_DIR, "pages");
+const TEMPLATE_COMPONENTS_DIR = path.join(TEMPLATE_ROOT_DIR, "components");
+
+const tsFileInRoot = fs
+  .readdirSync(TEMPLATE_ROOT_DIR)
   .filter((file) => file.endsWith(".ts"));
 
-const configs = tsFiles.map((file) => ({
-  input: "templates/pages/" + file,
-  output: {
-    sourcemap: true,
-    format: "iife",
-    dir: "public/pages",
-    entryFileNames: "[name].[hash].js",
-    // etc
-  },
-  plugins: [
-    {
-      name: "cleanOutputDir",
-      buildStart() {
-        const DIR_PATH = "public/pages";
-        let files;
-        try {
-          files = fs.readdirSync(DIR_PATH);
-        } catch (err) {
-          switch (err.code) {
-            case "ENOENT":
-              return; // Noop when directory don't exists.
-            case "ENOTDIR":
-              throw new Error(`'${DIR_PATH}' is not a directory.`);
-            default:
-              throw err;
-          }
-        }
-        for (const file of files) {
-          const filePath = path.join(DIR_PATH, file);
-          fs.rmSync(filePath, { recursive: true });
-        }
-      },
+const tsFilesInPages = fs
+  .readdirSync(TEMPLATE_PAGES_DIR)
+  .filter((file) => file.endsWith(".ts"));
+
+const tsFilesInComponents = fs
+  .readdirSync(TEMPLATE_COMPONENTS_DIR)
+  .filter((file) => file.endsWith(".ts"));
+
+const getConfig = (file, inputDir) => {
+  const outputDir = inputDir.replace("templates", "public");
+  return {
+    input: path.join(inputDir, file),
+    output: {
+      sourcemap: true,
+      dir: outputDir,
+      entryFileNames: "[name].[hash].js",
     },
-    peerDepsExternal(),
-    resolve(),
-    commonjs(),
-    typescript({
-      // useTsconfigDeclarationDir: true,
-      // tsconfigOverride: {
-      //   exclude: ["**/*.stories.*"],
-      // },
-    }),
-    commonjs({
-      exclude: "node_modules",
-      ignoreGlobal: true,
-    }),
-    // // even livereload can work if you specify a different port for each entry point
-    // livereload({
-    //   watch: `public/${name}.*`,
-    //   port: 3000 + index,
-    // }),
-  ],
-  external: Object.keys(externalDeps),
-}));
+    plugins: [
+      {
+        name: "cleanOutputDir",
+        buildStart() {
+          const DIR_PATH = outputDir;
+          let dir;
+          try {
+            dir = fs.readdirSync(DIR_PATH);
+          } catch (err) {
+            switch (err.code) {
+              case "ENOENT":
+                return;
+              case "ENOTDIR":
+                throw new Error(`'${DIR_PATH}' is not a directory.`);
+              default:
+                throw err;
+            }
+          }
+          for (const filename of dir) {
+            const filePath = path.join(DIR_PATH, filename);
+            const filenameNoExtensions = filename.split(".")[0];
+            if (filenameNoExtensions === path.parse(file).name) {
+              fs.rmSync(filePath, { recursive: true });
+            }
+          }
+        },
+      },
+      peerDepsExternal(),
+      resolve(),
+      commonjs(),
+      typescript({}),
+      commonjs({
+        exclude: "node_modules",
+        ignoreGlobal: true,
+      }),
+    ],
+    external: Object.keys(externalDeps),
+  };
+};
+
+const configs = [
+  ...tsFileInRoot.map((file) => getConfig(file, TEMPLATE_ROOT_DIR)),
+  ...tsFilesInPages.map((file) => getConfig(file, TEMPLATE_PAGES_DIR)),
+  ...tsFilesInComponents.map((file) =>
+    getConfig(file, TEMPLATE_COMPONENTS_DIR)
+  ),
+];
 
 module.exports = configs;

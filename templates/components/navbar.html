@@ -1,7 +1,7 @@
 <nav
   class="mx-auto flex w-full flex-col shadow-md items-center border-gray-200 bg-gray-50 p-4 dark:bg-gray-900 md:flex-row md:px-8 md:py-4">
   <div class="flex w-full flex-row justify-between">
-    <a id="logo-link" href="{{ url_for(pages['HOME'].name) }}">
+    <a id="logo-link" href="{{ url_for('home') }}">
       <svg id="logo" xmlns="http://www.w3.org/2000/svg" height="2em" fill="currentColor"
         class="transition-300 text-gray-800 transition-opacity hover:opacity-90 dark:text-white" viewBox="0 0 407 512">
         <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
@@ -23,24 +23,6 @@
         <path
           d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
       </svg>
-      <script>
-        me("#mobile-menu-toggle").on("click", (evt) => {
-          const toggleTargetSelector = evt.currentTarget.dataset.target;
-
-          if (toggleTargetSelector) {
-            const toggle = () => {
-              me(toggleTargetSelector)?.classToggle("hidden");
-              me("svg#open-menu")?.classToggle("hidden");
-              me("svg#close-menu")?.classToggle("hidden");
-            };
-            if (document.startViewTransition) {
-              document.startViewTransition(toggle);
-            } else {
-              toggle();
-            }
-          }
-        });
-      </script>
     </span>
 
     <svg id="close-menu" class="hidden fill-gray-700 dark:fill-gray-200" xmlns="http://www.w3.org/2000/svg" height="2em"
@@ -53,10 +35,9 @@
 
   <ul id="menu-items"
     class="mt-4 flex hidden w-full flex-col justify-center rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium dark:border-gray-700 dark:bg-gray-800 md:mt-0 md:flex md:flex-row md:space-x-8 md:border-0 md:bg-white md:p-0 md:dark:bg-gray-900">
-    {% for page in pages.values() %}
+    {% for page in pages %}
     <li>
-      <a href="{{ url_for(page['name']) }}" hx-boost="true" hx-target="main" hx-select="main" hx-swap="show:window:top"
-        data-page-name="{{ page['name'] }}" class="focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium px-5 text-center dark:focus:ring-primary-900 block rounded py-2 text-white dark:text-white md:bg-transparent md:p-0
+      <a href="{{ url_for(page['name']) }}" hx-boost="true" data-page-name="{{ page['name'] }}" class="focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium px-5 text-center dark:focus:ring-primary-900 block rounded py-2 text-white dark:text-white md:bg-transparent md:p-0
         {{ 
             'bg-blue-700 dark:text-white md:text-blue-700 md:dark:text-blue-500' 
             if current_page['name'] == page['name'] 

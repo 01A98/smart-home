@@ -1,4 +1,8 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block head %}
+<script type="module" src="{{ js_file }}"></script>
+{% endblock head %}
+{% block content %}
 <main class="w-full h-screen">
   <section
     class="w-full h-full bg-white dark:bg-gray-900 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]">
@@ -13,8 +17,7 @@
         Sorry, we can't find that page. You'll find lots to explore on the home
         page.
       </p>
-      <a href="{{ url_for(pages['HOME'].name) }}" hx-boost="true" hx-target="main" hx-select="main"
-        hx-swap="show:window:top"
+      <a href="{{ url_for('home') }}" hx-boost="true"
         class="inline-flex text-white bg-primary-600 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-900 my-4">Back
         to Homepage</a>
     </div>
