@@ -14,20 +14,31 @@ const externalDeps = {
 };
 
 const TEMPLATE_ROOT_DIR = "templates";
-const TEMPLATE_PAGES_DIR = path.join(TEMPLATE_ROOT_DIR, "pages");
-const TEMPLATE_COMPONENTS_DIR = path.join(TEMPLATE_ROOT_DIR, "components");
+const TEMPLATE_VIEWS_DIR = path.join(TEMPLATE_ROOT_DIR, "views");
+const TEMPLATE_MACROS_DIR = path.join(TEMPLATE_ROOT_DIR, "macros");
 
 const tsFileInRoot = fs
   .readdirSync(TEMPLATE_ROOT_DIR)
-  .filter((file) => file.endsWith(".ts"));
+  .filter((file) => file.endsWith(".ts"))
+  .map((file) => ({ file, inputDir: TEMPLATE_ROOT_DIR }));
 
-const tsFilesInPages = fs
-  .readdirSync(TEMPLATE_PAGES_DIR)
-  .filter((file) => file.endsWith(".ts"));
+const tsFilesInViews = fs
+  .readdirSync(TEMPLATE_VIEWS_DIR, { withFileTypes: true })
+  .filter((dirent) => dirent.isDirectory())
+  .flatMap((dirent) =>
+    fs
+      .readdirSync(path.join(dirent.path, dirent.name))
+      .filter((file) => file.endsWith(".ts"))
+      .map((file) => ({
+        file,
+        inputDir: path.join(TEMPLATE_VIEWS_DIR, dirent.name),
+      }))
+  );
 
 const tsFilesInComponents = fs
-  .readdirSync(TEMPLATE_COMPONENTS_DIR)
-  .filter((file) => file.endsWith(".ts"));
+  .readdirSync(TEMPLATE_MACROS_DIR)
+  .filter((file) => file.endsWith(".ts"))
+  .map((file) => ({ file, inputDir: TEMPLATE_MACROS_DIR }));
 
 const getConfig = (file, inputDir) => {
   const outputDir = inputDir.replace("templates", "public");
@@ -79,11 +90,9 @@ const getConfig = (file, inputDir) => {
 };
 
 const configs = [
-  ...tsFileInRoot.map((file) => getConfig(file, TEMPLATE_ROOT_DIR)),
-  ...tsFilesInPages.map((file) => getConfig(file, TEMPLATE_PAGES_DIR)),
-  ...tsFilesInComponents.map((file) =>
-    getConfig(file, TEMPLATE_COMPONENTS_DIR)
-  ),
+  ...tsFileInRoot.map(({ file, inputDir }) => getConfig(file, inputDir)),
+  ...tsFilesInViews.map(({ file, inputDir }) => getConfig(file, inputDir)),
+  ...tsFilesInComponents.map(({ file, inputDir }) => getConfig(file, inputDir)),
 ];
 
 module.exports = configs;

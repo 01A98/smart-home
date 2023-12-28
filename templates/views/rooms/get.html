@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+{% from './macros/card-grid.html' import card_grid %}
+{% from "./macros/breadcrumbs.html" import breadcrumbs %}
+{{ breadcrumbs([navigation["home"], current_page]) }}
+<main class="w-full h-screen">
+    <!-- Card List Section -->
+    <section
+        class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]">
+        {{ card_grid(rooms) }}
+    </section>
+</main>
+{% endblock content %}

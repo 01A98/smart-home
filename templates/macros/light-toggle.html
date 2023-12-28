@@ -1,3 +1,4 @@
+{% macro light_toggle(bulb) %}
 <form id="toggle-on-off-form">
     <label class="relative inline-flex items-center cursor-pointer">
         <input name="on" hx-post="/toggle" hx-trigger="click" hx-target="#toggle-on-off-form" hx-swap="outerHTML"
@@ -11,3 +12,4 @@
             }}</span>
     </label>
 </form>
+{% endmacro %}

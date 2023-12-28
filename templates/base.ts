@@ -1,4 +1,4 @@
-import "./components/navbar";
+import "./macros/navbar";
 import Alpine from "alpinejs";
 
 window.Alpine = Alpine;

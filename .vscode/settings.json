@@ -3,7 +3,8 @@
         "alpinejs",
         "htmx",
         "pydantic",
-        "Sanic"
+        "Sanic",
+        "strorempty"
     ],
     "files.autoSave": "onFocusChange",
     "tailwindCSS.includeLanguages": {
@@ -16,5 +17,14 @@
         "*.html": "jinja-html"
     },
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "smart-home",
+            "database": "${workspaceFolder:smart-home}/db.sql"
+        }
+    ],
+    "autoimport.filesToScan": "**/*.{ts,py,js}"
 }

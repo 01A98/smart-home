@@ -1,15 +1,14 @@
+import argparse
 import asyncio
-import logging
 import json
+import logging
 from typing import ByteString, Callable, Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field, validator
-import argparse
 
 _LOGGER = logging.getLogger(__name__)
 
-IP = "192.168.1.28"
-PORT = 38899
+UDP_PORT = 38899
 
 
 class WizProtocol(asyncio.DatagramProtocol):
@@ -79,8 +78,8 @@ class BulbParameters(BaseModel):
     temp: Optional[int] = Field(
         default=None,
         alias="temperature",
-        ge=2000,
-        le=7000,
+        ge=2200,
+        le=6500,
         description="CCT value, measured in Kelvins",
     )
 
@@ -158,7 +157,7 @@ MESSAGES = {
         exclude_none=True,
     )
     .encode("utf-8"),
-    "WARM": WizMessage(params=BulbParameters(on=True, temperature=2000))
+    "WARM": WizMessage(params=BulbParameters(on=True, temperature=2200))
     .model_dump_json(
         exclude_none=True,
     )
@@ -182,7 +181,7 @@ def parse_args():
 
 
 def parse_bulb_response(
-    response_message: ByteString
+    response_message: ByteString,
 ) -> Tuple[Optional[WizError], Optional[Union[WizSetResult, WizGetResult]]]:
     response_data = json.loads(response_message)
     error = response_data.get("error")
@@ -194,7 +193,7 @@ async def get_transport(
     event_loop: asyncio.AbstractEventLoop,
     response_future: asyncio.Future,
     ip: str = "255.255.255.255",
-    port: int = 38899,
+    port: int = UDP_PORT,
 ):
     transport, _protocol = await event_loop.create_datagram_endpoint(
         lambda: WizProtocol(
@@ -208,23 +207,11 @@ async def get_transport(
     return transport
 
 
-async def main():
-    args = parse_args()
-    event_loop = asyncio.get_event_loop()
+async def send_message_to_wiz(ip: str, message: bytes = MESSAGES["INFO"]):
     response_future = asyncio.Future()
-    transport = await get_transport(IP, event_loop, response_future)
+    transport = await get_transport(asyncio.get_event_loop(), response_future, ip)
 
-    transport.sendto(MESSAGES[args.message.upper()])
+    transport.sendto(message)
 
-    response_message, _addr = await asyncio.wait_for(
-        asyncio.shield(response_future), timeout=10
-    )
-    error, result = parse_bulb_response(response_message)
-    if error:
-        print(error)
-    if result:
-        print(result)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    response_message, _addr = await response_future
+    return parse_bulb_response(response_message)
