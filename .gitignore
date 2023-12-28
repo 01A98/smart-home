@@ -4,4 +4,4 @@ __pycache__
 node_modules
 db.sql*
 .idea
-public
+public/**/*
