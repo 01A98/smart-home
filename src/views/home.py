@@ -8,7 +8,7 @@ from . import NAVIGATION, Page, PageContext
 def create_view(app: Sanic) -> None:
     class HomeView(HTTPMethodView):
         page = Page(
-            name="home_handler",
+            name="home",
             path="/",
             title="Strona główna",
             template_path="views/home/get.html",

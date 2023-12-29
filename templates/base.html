@@ -19,7 +19,7 @@
 
 <body hx-ext="head-support">
   {% from "./macros/navbar.html" import navbar %}
-  {{ navbar(url_for("home_handler"), navigation, current_page)}}
+  {{ navbar(url_for("home"), navigation, current_page)}}
   {% block content %}
   {% endblock content %}
 </body>

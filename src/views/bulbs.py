@@ -10,7 +10,7 @@ def create_view(app: Sanic) -> None:
     class BulbsView(HTTPMethodView):
         decorators = [atomic()]
         page = Page(
-            name="bulbs_handler",
+            name="bulbs",
             path="/bulbs",
             title="Żarówki",
             template_path="views/bulbs/get.html",
