@@ -6,15 +6,19 @@
 <main class="w-full h-screen">
     <!-- Card List Section -->
     <section
-        class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]">
-        <a href="{{ url_for('bulb_handler', id='new') }}" hx-boost="true">
-            <span role="button"
-                class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">+
-                Dodaj
-                Nowy
+        class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
+    >
+        <a
+            href="{{ url_for('bulb', id='new') }}"
+            hx-boost="true"
+        >
+            <span
+                role="button"
+                class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+            >
+                + Dodaj Nowy
             </span>
         </a>
-
         {{ card_grid(bulbs) }}
     </section>
 </main>

@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 {% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{{ breadcrumbs([navigation["home"], navigation['bulbs'], current_page]) }}
+{{ breadcrumbs([navigation["home"], navigation['rooms'], current_page]) }}
 <main class="w-full h-screen">
     <section
         class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
     >
         <form
             method="POST"
-            action="{{ url_for('bulb', id='new') }}"
-            hx-post="{{ url_for('bulb', id='new') }}"
+            action="{{ url_for('room', id='new') }}"
+            hx-post="{{ url_for('room', id='new') }}"
             hx-target="body"
             class="max-w-sm mx-auto flex flex-col justify-center"
         >
@@ -18,8 +18,8 @@
                 {{ form.name }}
             </div>
             <div class="mb-5">
-                {{ form.ip_address.label.text | safe }}
-                {{ form.ip_address }}
+                {{ form.description.label.text | safe }}
+                {{ form.description }}
             </div>
             <button
                 type="submit"

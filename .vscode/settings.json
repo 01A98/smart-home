@@ -1,10 +1,14 @@
 {
     "cSpell.words": [
         "alpinejs",
+        "formdata",
         "htmx",
+        "markupsafe",
+        "multidict",
         "pydantic",
         "Sanic",
-        "strorempty"
+        "strorempty",
+        "wtforms"
     ],
     "files.autoSave": "onFocusChange",
     "tailwindCSS.includeLanguages": {
@@ -26,5 +30,9 @@
             "database": "${workspaceFolder:smart-home}/db.sql"
         }
     ],
-    "autoimport.filesToScan": "**/*.{ts,py,js}"
+    "autoimport.filesToScan": "**/*.{ts,py,js}",
+    "html.format.indentHandlebars": true,
+    "html.format.templating": true,
+    "html.format.wrapLineLength": 90,
+    "html.format.wrapAttributes": "force-expand-multiline"
 }

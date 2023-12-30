@@ -1,16 +1,33 @@
 {% macro card_grid(records) %}
 <!-- Card Grid -->
-<div class="grid grid-flow-row gap-8 text-neutral-600 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+{% if records | length == 0 %}
+<div class="mb-4 mx-auto max-w-screen-sm flex flex-col gap-2 justify-center items-center">
+    <h3
+        class="mb-4 text-3xl tracking-tight font-bold text-gray-900 md:text-4xl dark:text-white">
+        Pusto :>
+    </h3>
+    <p class="mb-4 text-lg font-light text-gray-500 dark:text-gray-400 mx-4">
+        Może pora coś tutaj dodać.
+    </p>
+</div>
+{% endif %}
+<div
+    class="grid grid-flow-row gap-8 text-neutral-600 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
     {% for record in records %}
     <!-- Card Item -->
     <div
         class="my-8 rounded shadow-lg shadow-gray-200 dark:shadow-gray-900 bg-white dark:bg-gray-800 duration-300 hover:-translate-y-1">
         <!-- Clickable Area -->
-        <a _href="link" class="cursor-pointer">
+        <a
+            _href="link"
+            class="cursor-pointer"
+        >
             <figure>
                 <figcaption class="p-4">
                     <!-- Title -->
-                    <p class="text-lg mb-4 font-bold leading-relaxed text-gray-800 dark:text-gray-300">
+                    <p
+                        class="text-lg mb-4 font-bold leading-relaxed text-gray-800 dark:text-gray-300">
                         {{ record['name'] }}
                         <!-- Post Title -->
                     </p>

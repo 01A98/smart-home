@@ -169,15 +169,9 @@ MESSAGES = {
     .encode("utf-8"),
 }
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Wiz Light Control Script")
-    parser.add_argument(
-        "message",
-        choices=list(map(str.lower, MESSAGES.keys())),
-        help="Select the message to send",
-    )
-    return parser.parse_args()
+ParsedBulbResponse = Tuple[
+    Optional[WizError], Optional[Union[WizSetResult, WizGetResult]]
+]
 
 
 def parse_bulb_response(
@@ -207,11 +201,15 @@ async def get_transport(
     return transport
 
 
-async def send_message_to_wiz(ip: str, message: bytes = MESSAGES["INFO"]):
+async def send_message_to_wiz(
+    ip: str, message: bytes = MESSAGES["INFO"]
+) -> dict[str, ParsedBulbResponse]:
     response_future = asyncio.Future()
     transport = await get_transport(asyncio.get_event_loop(), response_future, ip)
 
     transport.sendto(message)
 
-    response_message, _addr = await response_future
-    return parse_bulb_response(response_message)
+    response_message, addr = await response_future
+    host, _port = addr
+
+    return {host: parse_bulb_response(response_message)}

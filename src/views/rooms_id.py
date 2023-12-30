@@ -4,31 +4,31 @@ from sanic.views import HTTPMethodView
 from tortoise.transactions import atomic
 
 from ..form_helpers import get_formdata
-from ..forms import BulbForm
-from ..models import Bulb, Bulb_Py
+from ..forms import RoomForm
+from ..models import Room, Room_Py
 from . import Page, PageContext
 
 
 def create_view(app: Sanic) -> None:
-    class BulbView(HTTPMethodView):
+    class RoomView(HTTPMethodView):
         decorators = [atomic()]
-        template_path = "views/bulbs/:id/get.html"
+        template_path = "views/rooms/:id/get.html"
 
         @classmethod
         def page(cls, id: str):
             if id == "new":
                 return Page(
-                    name="bulb",
-                    path="/bulbs/new",
-                    title="Dodaj Żarówkę",
+                    name="room",
+                    path="/rooms/new",
+                    title="Dodaj Pokój",
                     template_path=cls.template_path,
                 )
             else:
                 id_ = int(id)
                 return Page(
-                    name="bulb",
-                    path=f"/bulbs/${id_}",
-                    title=f"Żarówka #${id_}",
+                    name="room",
+                    path=f"/rooms/${id_}",
+                    title=f"Pokój #${id_}",
                     template_path=cls.template_path,
                 )
 
@@ -39,21 +39,21 @@ def create_view(app: Sanic) -> None:
                 context["new"] = True
             else:
                 id_ = int(id)
-                bulb_record = await Bulb.get(id=id_)
-                bulb = (await Bulb_Py.from_tortoise_orm(bulb_record)).model_dump()
-                context["bulb"] = bulb
+                room_record = await Room.get(id=id_)
+                room = (await Room_Py.from_tortoise_orm(room_record)).model_dump()
+                context["room"] = room
 
-            return {**context, "form": BulbForm()}
+            return {**context, "form": RoomForm()}
 
         async def post(self, request: Request, id: str):
-            form = BulbForm(get_formdata(request))
+            form = RoomForm(get_formdata(request))
             if form.validate():
-                await Bulb.create(
+                await Room.create(
                     name=form.name.data,
-                    ip=form.ip_address.data,
+                    description=form.description.data,
                 )
-                return redirect(app.url_for("bulbs"), status=303)
+                return redirect(app.url_for("rooms"), status=303)
             if form.errors:
                 raise BadRequest(str(form.errors.items()))
 
-    app.add_route(BulbView.as_view(), "/bulb/<id:strorempty>", name="bulb")
+    app.add_route(RoomView.as_view(), "/room/<id:strorempty>", name="room")
