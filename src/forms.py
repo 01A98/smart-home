@@ -3,7 +3,7 @@ import re
 from markupsafe import Markup
 from multidict import MultiDict
 from sanic import Request
-from wtforms import Form, StringField, validators, TextAreaField
+from wtforms import Form, SelectField, StringField, validators, TextAreaField
 
 from .form_helpers import get_styled_label, get_input_classes
 
@@ -17,7 +17,7 @@ class BulbForm(Form):
             ),
             validators.InputRequired(),
         ],
-        render_kw={"placeholder": "Lampka", "class": get_input_classes()},
+        render_kw={"class": get_input_classes()},
     )
     ip_address = StringField(
         get_styled_label("Adres IP", "ip_address"),
@@ -32,6 +32,13 @@ class BulbForm(Form):
         ],
         render_kw={"placeholder": "XXX.XXX.XXX.XXX", "class": get_input_classes()},
     )
+    room = SelectField(
+        get_styled_label("Pokój", "room"),
+        [validators.Optional()],
+        coerce=str,
+        default="",
+        render_kw={"class": get_input_classes()},
+    )
 
 
 class RoomForm(Form):
@@ -43,7 +50,7 @@ class RoomForm(Form):
             ),
             validators.InputRequired(),
         ],
-        render_kw={"placeholder": "Salon", "class": get_input_classes()},
+        render_kw={"class": get_input_classes()},
     )
     description = TextAreaField(
         get_styled_label("Opis", "description"),

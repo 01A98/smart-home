@@ -3,23 +3,21 @@
 {% from './macros/card-grid.html' import card_grid %}
 {% from "./macros/breadcrumbs.html" import breadcrumbs %}
 {{ breadcrumbs([navigation["home"], current_page]) }}
-<main class="w-full h-screen">
+<main class="w-full">
     <!-- Card List Section -->
     <section
-        class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
+        class="w-full h-full min-h-screen bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
     >
-        <a
-            href="{{ url_for('bulb', id='new') }}"
-            hx-boost="true"
-        >
+        <a href="{{ url_for('bulb', id='new') }}">
             <span
                 role="button"
-                class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+                class="text-white bg-pink-700 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-md px-4 py-3 text-center mb-4 dark:bg-pink-700 dark:hover:bg-indigo-700 dark:focus:ring-purple-900"
             >
                 + Dodaj Nowy
             </span>
         </a>
-        {{ card_grid(bulbs) }}
+        {% call card_grid(bulbs, 'bulb') %}
+        {% endcall %}
     </section>
 </main>
 {% endblock content %}

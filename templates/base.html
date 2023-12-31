@@ -3,21 +3,50 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
   <title>{{ current_page.title if current_page.title else 'Smart Home' }}</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.css" rel="stylesheet" />
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.css"
+    rel="stylesheet"
+  />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js"></script>
+  <script
+    defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js"
+  ></script>
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
   <script type="text/javascript">
     htmx.config.globalViewTransitions = true;
   </script>
-  <script type="module" src="{{ base_js }}"></script>
+  <style>
+    .htmx-indicator {
+      opacity: 0;
+      transition: opacity 300ms ease-in;
+    }
+
+    .htmx-request .htmx-indicator {
+      opacity: 1
+    }
+
+    .htmx-request.htmx-indicator {
+      opacity: 1
+    }
+  </style>
+  <script
+    type="module"
+    src="{{ base_js }}"
+  ></script>
   {% block head %} {% endblock head %}
 </head>
 
-<body hx-ext="head-support">
+<body
+  hx-ext="head-support"
+  hx-boost="true"
+>
   {% from "./macros/navbar.html" import navbar %}
   {{ navbar(url_for("home"), navigation, current_page)}}
   {% block content %}

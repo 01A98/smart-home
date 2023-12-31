@@ -6,23 +6,13 @@ from sanic.response import redirect
 from sanic.worker.loader import AppLoader
 from tortoise.contrib.sanic import register_tortoise
 
-from src.logging import *
+import src.logging
 from src.settings import SETTINGS
-from src.views.bulbs import create_view as create_bulbs_view
-from src.views.bulbs_id import create_view as create_bulbs_id_view
-from src.views.home import create_view as create_home_view
-from src.views.more import create_view as create_more_view
-from src.views.rooms import create_view as create_rooms_view
-from src.views.rooms_id import create_view as create_rooms_id_view
+from src.views import create_views
 
 
 def attach_endpoints(app: Sanic):
-    create_home_view(app)
-    create_bulbs_view(app)
-    create_bulbs_id_view(app)
-    create_rooms_view(app)
-    create_more_view(app)
-    create_rooms_id_view(app)
+    create_views(app)
 
 
 def serve_static_files(app: Sanic):
@@ -35,14 +25,15 @@ def apply_static_redirects(app: Sanic):
     def get_static_function(value: Any) -> Callable[..., Any]:
         return lambda *_, **__: value
 
-    for src, dest in SETTINGS.static_redirects.items():
+    for src_, dest in SETTINGS.static_redirects.items():
         response = redirect(dest)
         handler = get_static_function(response)
-        app.route(src)(handler)
+        app.route(src_)(handler)
 
 
 def create_app(app_name: str = "smart-home") -> Sanic:
     app = Sanic(app_name)
+    app.config.TEMPLATING_ENABLE_ASYNC = True
     attach_endpoints(app)
     serve_static_files(app)
     apply_static_redirects(app)

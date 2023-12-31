@@ -9,8 +9,6 @@
         <form
             method="POST"
             action="{{ url_for('room', id='new') }}"
-            hx-post="{{ url_for('room', id='new') }}"
-            hx-target="body"
             class="max-w-sm mx-auto flex flex-col justify-center"
         >
             <div class="mb-5">
@@ -21,12 +19,25 @@
                 {{ form.description.label.text | safe }}
                 {{ form.description }}
             </div>
+            {% if request.match_info['id'] | int(-1) != -1 %}
             <button
                 type="submit"
+                hx-patch="{{ url_for('room', id=request.match_info['id']) }}"
+                hx-target="body"
+                class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+            >
+                Zapisz
+            </button>
+            {% else %}
+            <button
+                type="submit"
+                hx-post="{{ url_for('room', id='new') }}"
+                hx-target="body"
                 class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
             >
                 Dodaj
             </button>
+            {% endif %}
         </form>
     </section>
 </main>

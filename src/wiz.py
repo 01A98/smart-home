@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import json
 import logging
@@ -203,7 +202,7 @@ async def get_transport(
 
 async def send_message_to_wiz(
     ip: str, message: bytes = MESSAGES["INFO"]
-) -> dict[str, ParsedBulbResponse]:
+) -> ParsedBulbResponse:
     response_future = asyncio.Future()
     transport = await get_transport(asyncio.get_event_loop(), response_future, ip)
 
@@ -212,4 +211,4 @@ async def send_message_to_wiz(
     response_message, addr = await response_future
     host, _port = addr
 
-    return {host: parse_bulb_response(response_message)}
+    return parse_bulb_response(response_message)

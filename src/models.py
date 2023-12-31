@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import Callable
+from typing import Any, Callable, Coroutine
 
 from tortoise.contrib.pydantic.creator import pydantic_model_creator
 from tortoise.exceptions import ValidationError
@@ -17,6 +17,8 @@ from tortoise.fields import (
 )
 from tortoise.models import Model
 from tortoise.validators import RegexValidator, validate_ipv4_address
+
+from .wiz import ParsedBulbResponse, send_message_to_wiz
 
 
 def validate_int_in_range(min: int, max: int) -> Callable[[int], None]:
@@ -37,7 +39,12 @@ class TimestampMixin:
     updated_at = DatetimeField(null=True, auto_now=True)
 
 
-class Icon(Model, TimestampMixin):
+class GetItemMixin:
+    def __getitem__(self, key: str):
+        return getattr(self, key)
+
+
+class Icon(Model, TimestampMixin, GetItemMixin):
     name = CharField(max_length=128)
     variant = CharEnumField(enum_type=IconVariant, default=IconVariant.LIGHT)
     svg = TextField()
@@ -46,7 +53,7 @@ class Icon(Model, TimestampMixin):
         return self.name
 
 
-class Setting(Model, TimestampMixin):
+class Setting(Model, TimestampMixin, GetItemMixin):
     name = CharField(max_length=128)
     hex_color = CharField(
         max_length=6,
@@ -66,7 +73,7 @@ class Setting(Model, TimestampMixin):
         return self.name
 
 
-class Room(Model, TimestampMixin):
+class Room(Model, TimestampMixin, GetItemMixin):
     name = CharField(max_length=128, unique=True)
     description = TextField(null=True)
     is_favorite = BooleanField(default=False)
@@ -78,7 +85,7 @@ class Room(Model, TimestampMixin):
         return self.name
 
 
-class Bulb(Model, TimestampMixin):
+class Bulb(Model, TimestampMixin, GetItemMixin):
     ip = CharField(validators=[validate_ipv4_address], max_length=15, unique=True)
     name = CharField(max_length=128)
     room: ForeignKeyRelation[Room] | None = ForeignKeyField(
@@ -88,10 +95,16 @@ class Bulb(Model, TimestampMixin):
         "models.Icon", null=True, on_delete=SET_NULL
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    async def dict(self):
+    async def assign_wiz_info(self) -> None:
+        self.wiz_info = await self.get_wiz_info()
+
+    async def get_wiz_info(self) -> ParsedBulbResponse:
+        return await send_message_to_wiz(self.ip)
+
+    async def dict(self) -> dict[str, Any]:
         return (await Bulb_Py.from_tortoise_orm(self)).model_dump()
 
 
