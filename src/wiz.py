@@ -4,10 +4,18 @@ import logging
 from typing import ByteString, Callable, Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field, validator
+from tenacity import (
+    retry_if_exception_type,
+    stop_after_delay,
+    wait_fixed,
+    RetryError,
+    AsyncRetrying,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 UDP_PORT = 38899
+TIMEOUT = 2
 
 
 class WizProtocol(asyncio.DatagramProtocol):
@@ -103,13 +111,19 @@ class WizGetResult(BaseModel):
     rssi: Optional[int] = Field(description="Signal strength of the bulb")
     src: Optional[str] = Field(description="Source of the message")
     state: Optional[bool] = Field(description="State of the bulb (on/off)")
-    sceneId: Optional[int] = Field(ge=0, le=32, description="Predefined scene ID")
-    speed: Optional[int] = Field(
-        None, ge=20, le=200, description="Speed of dynamic light modes"
+    sceneId: Optional[int] = Field(
+        default=None, ge=0, le=32, description="Predefined scene ID"
     )
-    temp: Optional[int] = Field(description="Color temperature in kelvins")
-    dimming: Optional[int] = Field(ge=10, le=100, description="Brightness value")
-    schdPsetId: Optional[int] = Field(description="Rhythm ID of the room")
+    speed: Optional[int] = Field(
+        default=None, ge=20, le=200, description="Speed of dynamic light modes"
+    )
+    temp: Optional[int] = Field(
+        default=None, description="Color temperature in kelvins"
+    )
+    dimming: Optional[int] = Field(
+        default=None, ge=10, le=100, description="Brightness value"
+    )
+    schdPsetId: Optional[int] = Field(default=None, description="Rhythm ID of the room")
 
     @validator("state", pre=False)
     def bool_to_on_or_off(cls, val):
@@ -132,7 +146,7 @@ class WizResponse(BaseModel):
         default="setPilot", description="Method name"
     )
     env: Literal["pro"] = "pro"
-    result: Optional[Union[WizGetResult, WizSetResult]] = Field(
+    result: Optional[Union[BulbParameters, WizSetResult]] = Field(
         default=None, description="Result message from the bulb"
     )
     error: Optional[WizError] = Field(
@@ -141,31 +155,11 @@ class WizResponse(BaseModel):
 
 
 MESSAGES = {
-    "ON": WizMessage(params=BulbParameters(on=True))
-    .model_dump_json(
-        exclude_none=True,
-    )
-    .encode("utf-8"),
-    "OFF": WizMessage(params=BulbParameters(on=False))
-    .model_dump_json(
-        exclude_none=True,
-    )
-    .encode("utf-8"),
-    "INFO": WizMessage(method="getPilot")
-    .model_dump_json(
-        exclude_none=True,
-    )
-    .encode("utf-8"),
-    "WARM": WizMessage(params=BulbParameters(on=True, temperature=2200))
-    .model_dump_json(
-        exclude_none=True,
-    )
-    .encode("utf-8"),
-    "COLD": WizMessage(params=BulbParameters(on=True, temperature=6500))
-    .model_dump_json(
-        exclude_none=True,
-    )
-    .encode("utf-8"),
+    "ON": WizMessage(params=BulbParameters(on=True)),
+    "OFF": WizMessage(params=BulbParameters(on=False)),
+    "INFO": WizMessage(method="getPilot"),
+    "WARM": WizMessage(params=BulbParameters(on=True, temperature=2200)),
+    "COLD": WizMessage(params=BulbParameters(on=True, temperature=6500)),
 }
 
 ParsedBulbResponse = Tuple[
@@ -175,17 +169,26 @@ ParsedBulbResponse = Tuple[
 
 def parse_bulb_response(
     response_message: ByteString,
-) -> Tuple[Optional[WizError], Optional[Union[WizSetResult, WizGetResult]]]:
+    wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
+):
     response_data = json.loads(response_message)
     error = response_data.get("error")
     result = response_data.get("result")
-    return error, result
+
+    parsed_error = WizError(**error) if error else None
+    parsed_result = (
+        WizSetResult(**result)
+        if wiz_message_method == "setPilot"
+        else WizGetResult(**result)
+    )
+
+    return parsed_error, parsed_result
 
 
 async def get_transport(
     event_loop: asyncio.AbstractEventLoop,
     response_future: asyncio.Future,
-    ip: str = "255.255.255.255",
+    ip: str = "192.168.1.255",
     port: int = UDP_PORT,
 ):
     transport, _protocol = await event_loop.create_datagram_endpoint(
@@ -201,14 +204,28 @@ async def get_transport(
 
 
 async def send_message_to_wiz(
-    ip: str, message: bytes = MESSAGES["INFO"]
-) -> ParsedBulbResponse:
+    ip: str, message: WizMessage = MESSAGES["INFO"]
+) -> tuple[None, WizSetResult | WizGetResult] | tuple[str | WizError, None]:
+    no_response_error_message = "Bulb offline"
+    message_bytes = message.model_dump_json(
+        exclude_none=True,
+    ).encode("utf-8")
+
     response_future = asyncio.Future()
     transport = await get_transport(asyncio.get_event_loop(), response_future, ip)
 
-    transport.sendto(message)
-
-    response_message, addr = await response_future
-    host, _port = addr
-
-    return parse_bulb_response(response_message)
+    try:
+        transport.sendto(message_bytes, (ip, UDP_PORT))
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
+            wait=wait_fixed(0.1),  # 100ms
+            stop=stop_after_delay(TIMEOUT),
+        ):
+            with attempt:
+                response_message, _addr = response_future.result()
+                parsed_response = parse_bulb_response(
+                    response_message, wiz_message_method=message.method
+                )
+                return parsed_response
+    except RetryError:
+        return no_response_error_message, None

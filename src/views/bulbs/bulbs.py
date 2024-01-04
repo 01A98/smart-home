@@ -1,30 +1,42 @@
-import asyncio
-from markupsafe import Markup
-from sanic import Request, Sanic, json
+from itertools import groupby
+
+from sanic import Request, Sanic
 from sanic.views import HTTPMethodView
-from sanic.response import html
+from sanic_ext import render
 from tortoise.transactions import atomic
 
-from ...wiz import send_message_to_wiz
-
-from ...models import Bulb, Bulb_Py
 from .. import NAVIGATION, Page, PageContext
+from ...models.bulb import Bulb
 
 
 def create_view(app: Sanic) -> None:
     class BulbsView(HTTPMethodView):
         decorators = [atomic()]
         page = Page(
-            name="bulbs",
-            path="/bulbs",
+            name="BulbsView",
             title="Żarówki",
             template_path="views/bulbs/get.html",
         )
 
-        @app.ext.template(page.template_path)
         async def get(self, request: Request):
-            bulbs = await Bulb.all()
-            return {"bulbs": bulbs, **PageContext(current_page=self.page).model_dump()}
+            bulbs = await Bulb.all().prefetch_related("room")
 
-    app.add_route(BulbsView.as_view(), BulbsView.page.path, name=BulbsView.page.name)
+            bulbs_by_room_name_grouped = groupby(
+                bulbs,
+                lambda bulb: bulb.room.name if bulb.room else "Bez przypisanego pokoju",
+            )
+            bulbs_by_room_name = {
+                room_name: list(bulbs)
+                for room_name, bulbs in bulbs_by_room_name_grouped
+            }
+
+            return await render(
+                self.page.template_path,
+                context={
+                    "bulbs_by_room_name": bulbs_by_room_name,
+                    **PageContext(current_page=self.page).model_dump(),
+                },
+            )
+
+    app.add_route(BulbsView.as_view(), "/bulbs")
     NAVIGATION["bulbs"] = BulbsView.page

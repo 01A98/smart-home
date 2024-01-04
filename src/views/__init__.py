@@ -9,7 +9,6 @@ from src.utils import get_js_file
 
 class Page(BaseModel):
     name: str
-    path: str
     title: Optional[str] = ""
     template_path: Optional[str] = ""
     js_file: Optional[str] = None
@@ -32,9 +31,9 @@ class PageContext(BaseModel):
 def create_views(app: Sanic) -> None:
     from .home.home import create_view as create_home_view
     from .bulbs.bulbs import create_view as create_bulbs_view
-    from .bulbs.id.bulbs import create_view as create_bulbs_id_view
+    from .bulbs.id.bulb import create_view as create_bulbs_id_view
     from .rooms.rooms import create_view as create_rooms_view
-    from .rooms.id.rooms import create_view as create_rooms_id_view
+    from .rooms.id.room import create_view as create_rooms_id_view
     from .more.more import create_view as create_more_view
 
     create_home_view(app)

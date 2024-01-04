@@ -1,24 +1,23 @@
 {% extends "base.html" %}
 {% block head %}
-<script
-    type="module"
-    src="{{ js_file }}"
-></script>
+    <script
+            type="module"
+            src="{{ js_file }}"
+    ></script>
 {% endblock head %}
 {% block content %}
 
-<main class="w-full">
-    <section
-        class="w-full h-full min-h-screen bg-white dark:bg-gray-900 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
-    >
-        <div
-            class="py-8 px-4 mx-auto max-w-screen-xl flex flex-col text-center lg:py-16 z-10 relative">
-            <h1
-                class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
-                Panel główny
-            </h1>
-            {%
-            set posts = [
+    <main class="w-full">
+        <section
+                class="w-full h-full min-h-screen bg-white dark:bg-gray-900 "
+        >
+            <div
+                    class="py-8 px-4 mx-auto max-w-screen-xl flex flex-col text-center lg:py-16 z-10 relative">
+                <h1
+                        class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white">
+                    Panel główny
+                </h1>
+                {% set posts = [
             {
             "image":
             "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
@@ -148,53 +147,52 @@
             the
             world of espresso!",
             }
-            ]
-            %}
-            <!-- Card List Section -->
-            <section class="bg-gray-100 dark:bg-gray-900 py-10 px-12">
-                <!-- Card Grid -->
-                <div
-                    class="grid grid-flow-row gap-8 text-neutral-600 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {% for post in posts %}
-                    <!-- Card Item -->
+            ] %}
+                <!-- Card List Section -->
+                <section class="bg-gray-100 dark:bg-gray-900 py-10 px-12">
+                    <!-- Card Grid -->
                     <div
-                        class="my-8 rounded shadow-lg shadow-gray-200 dark:shadow-gray-900 bg-white dark:bg-gray-800 duration-300 hover:-translate-y-1">
-                        <!-- Clickable Area -->
-                        <a
-                            _href="link"
-                            class="cursor-pointer"
-                        >
-                            <figure>
-                                <!-- Image -->
-                                <img
-                                    src="{{ post['image'] + '?auto=format&fit=crop&w=400&q=50' }}"
-                                    class="rounded-t h-72 w-full object-cover"
-                                />
+                            class="grid grid-flow-row gap-8 text-neutral-600 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {% for post in posts %}
+                            <!-- Card Item -->
+                            <div
+                                    class="my-8 rounded shadow-lg shadow-gray-200 dark:shadow-gray-900 bg-white dark:bg-gray-800 duration-300 hover:-translate-y-1">
+                                <!-- Clickable Area -->
+                                <a
+                                        _href="link"
+                                        class="cursor-pointer"
+                                >
+                                    <figure>
+                                        <!-- Image -->
+                                        <img
+                                                src="{{ post['image'] + '?auto=format&fit=crop&w=400&q=50' }}"
+                                                class="rounded-t h-72 w-full object-cover"
+                                        />
 
-                                <figcaption class="p-4">
-                                    <!-- Title -->
-                                    <p
-                                        class="text-lg mb-4 font-bold leading-relaxed text-gray-800 dark:text-gray-300">
-                                        {{ post['title'] }}
-                                        <!-- Post Title -->
-                                    </p>
-                                    "<!-- Description" -->
-                                    <small
-                                        class="leading-5 text-gray-500 dark:text-gray-400"
-                                    >
-                                        <!-- "Post Description" -->
-                                        {{ post['description'] }}
-                                    </small>
-                                </figcaption>
-                            </figure>
-                        </a>
+                                        <figcaption class="p-4">
+                                            <!-- Title -->
+                                            <p
+                                                    class="text-lg mb-4 font-bold leading-relaxed text-gray-800 dark:text-gray-300">
+                                                {{ post['title'] }}
+                                                <!-- Post Title -->
+                                            </p>
+                                            "<!-- Description" -->
+                                            <small
+                                                    class="leading-5 text-gray-500 dark:text-gray-400"
+                                            >
+                                                <!-- "Post Description" -->
+                                                {{ post['description'] }}
+                                            </small>
+                                        </figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-            </section>
+                </section>
 
-        </div>
-        </div>
-    </section>
-</main>
+            </div>
+            </div>
+        </section>
+    </main>
 {% endblock content %}

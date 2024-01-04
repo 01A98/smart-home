@@ -1,31 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-{% from "./macros/card-grid.html" import card_grid %}
-{% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{% from "./macros/spinner.html" import spinner %}
-{{ breadcrumbs([navigation["home"], current_page]) }}
-<main class="w-full">
-    <section
-        class="w-full h-full min-h-screen bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
-    >
-        <div
-            hx-get="{{ url_for('rooms_with_bulb_info') }}"
-            hx-trigger="load"
-            hx-target="#card-grid"
-        ></div>
-        <a href="{{ url_for('room', id='new') }}">
+    {% from "./macros/card-grid.html" import card_grid %}
+    {% from "./macros/breadcrumbs.html" import breadcrumbs %}
+    {% from "./macros/spinner.html" import spinner %}
+    {{ breadcrumbs([navigation["home"], current_page]) }}
+    <main class="w-full">
+        <section
+                class="w-full h-full min-h-screen bg-gray-100 dark:bg-gray-900 py-10 px-12 "
+        >
+            <div
+                    hx-get="{{ url_for('rooms_with_bulb_info') }}"
+                    hx-trigger="load"
+                    hx-target="#card-grid"
+            ></div>
+            <a href="{{ url_for('RoomView', id='new') }}">
             <span
-                role="button"
-                class="self-center text-white bg-pink-700 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-md px-4 py-3 text-center mb-4 dark:bg-pink-700 dark:hover:bg-indigo-700 dark:focus:ring-purple-900"
+                    role="button"
+                    class="self-center text-white bg-pink-700 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-md px-4 py-3 text-center mb-4 dark:bg-pink-700 dark:hover:bg-indigo-700 dark:focus:ring-purple-900"
             >
                 + Dodaj Nowy
             </span>
-        </a>
-        <div id="card-grid">
-            {% call(bulbs) card_grid(rooms, 'room') %}
-            {{ spinner(htmx_indicator=False) }}
-            {% endcall %}
-        </div>
-    </section>
-</main>
+            </a>
+            <div id="card-grid">
+                {% call(bulbs) card_grid(rooms, 'RoomView') %}
+                    {{ spinner(htmx_indicator=False) }}
+                {% endcall %}
+            </div>
+        </section>
+    </main>
 {% endblock content %}

@@ -1,9 +1,11 @@
-from typing import List
 from markupsafe import Markup
 from multidict import MultiDict
 from sanic import Request
 
-from .models import Bulb, Icon, Room, Setting
+from ..models.bulb import Bulb
+from ..models.icon import Icon
+from ..models.room import Room
+from ..models.setting import Setting
 
 
 def get_input_classes():
@@ -19,10 +21,10 @@ def get_styled_label(text: str, for_: str):
     return Markup(
         f"""
         <label 
-            for="{ for_ }" 
+            for="{for_}" 
             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
         >
-            { text }
+            {text}
         </label>
         """
     )

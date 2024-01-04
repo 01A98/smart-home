@@ -1,44 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
-{% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{{ breadcrumbs([navigation["home"], navigation['rooms'], current_page]) }}
-<main class="w-full h-screen">
-    <section
-        class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
-    >
-        <form
-            method="POST"
-            action="{{ url_for('room', id='new') }}"
-            class="max-w-sm mx-auto flex flex-col justify-center"
+    {% from "./macros/breadcrumbs.html" import breadcrumbs %}
+    {{ breadcrumbs([navigation["home"], navigation['rooms'], current_page]) }}
+    <main class="w-full h-screen">
+        <section
+                class="w-full h-full bg-gray-100 dark:bg-gray-900 py-10 px-12 "
         >
-            <div class="mb-5">
-                {{ form.name.label.text | safe }}
-                {{ form.name }}
-            </div>
-            <div class="mb-5">
-                {{ form.description.label.text | safe }}
-                {{ form.description }}
-            </div>
-            {% if request.match_info['id'] | int(-1) != -1 %}
-            <button
-                type="submit"
-                hx-patch="{{ url_for('room', id=request.match_info['id']) }}"
-                hx-target="body"
-                class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+            <form
+                    method="POST"
+                    action="{{ url_for('RoomView', id='new') }}"
+                    class="max-w-sm mx-auto flex flex-col justify-center"
             >
-                Zapisz
-            </button>
-            {% else %}
-            <button
-                type="submit"
-                hx-post="{{ url_for('room', id='new') }}"
-                hx-target="body"
-                class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
-            >
-                Dodaj
-            </button>
-            {% endif %}
-        </form>
-    </section>
-</main>
+                <div class="mb-5">
+                    {{ form.name.label.text | safe }}
+                    {{ form.name }}
+                </div>
+                <div class="mb-5">
+                    {{ form.description.label.text | safe }}
+                    {{ form.description }}
+                </div>
+                {% if request.match_info['id'] | int(-1) != -1 %}
+                    <button
+                            type="submit"
+                            hx-patch="{{ url_for('RoomView', id=request.match_info['id']) }}"
+                            hx-target="body"
+                            class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+                    >
+                        Zapisz
+                    </button>
+                {% else %}
+                    <button
+                            type="submit"
+                            hx-post="{{ url_for('RoomView', id='new') }}"
+                            hx-target="body"
+                            class="w-1/3 self-center text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"
+                    >
+                        Dodaj
+                    </button>
+                {% endif %}
+            </form>
+        </section>
+    </main>
 {% endblock content %}

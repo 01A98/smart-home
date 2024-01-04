@@ -1,23 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
-{% from './macros/card-grid.html' import card_grid %}
-{% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{{ breadcrumbs([navigation["home"], current_page]) }}
-<main class="w-full">
-    <!-- Card List Section -->
-    <section
-        class="w-full h-full min-h-screen bg-gray-100 dark:bg-gray-900 py-10 px-12 bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern.svg')] dark:bg-[url('https://flowbite.s3.amazonaws.com/docs/jumbotron/hero-pattern-dark.svg')]"
-    >
-        <a href="{{ url_for('bulb', id='new') }}">
+    {% from './macros/card-grid.html' import card_grid %}
+    {% from "./macros/breadcrumbs.html" import breadcrumbs %}
+    {% from "./macros/spinner.html" import spinner %}
+    {{ breadcrumbs([navigation["home"], current_page]) }}
+    <main class="w-full">
+        <section
+                class="flex flex-col justify-center items-center w-full h-full min-h-screen bg-gray-100 dark:bg-gray-900 py-10 px-12 "
+        >
+            <a
+                    href="{{ url_for('BulbView', id='new') }}"
+                    class="self-start"
+            >
             <span
-                role="button"
-                class="text-white bg-pink-700 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-md px-4 py-3 text-center mb-4 dark:bg-pink-700 dark:hover:bg-indigo-700 dark:focus:ring-purple-900"
+                    role="button"
+                    class="self-center mb-8 text-white bg-pink-700 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-md px-4 py-3 text-center dark:bg-pink-700 dark:hover:bg-indigo-700 dark:focus:ring-purple-900"
             >
                 + Dodaj Nowy
             </span>
-        </a>
-        {% call card_grid(bulbs, 'bulb') %}
-        {% endcall %}
-    </section>
-</main>
+            </a>
+            <div class="w-full flex flex-col">
+                {% for room_name, bulbs in bulbs_by_room_name.items() %}
+                    <div
+                            class="my-6 flex flex-col border border-gray-300 dark:border-gray-700 rounded-md p-8">
+                        <a
+                                href="{{ url_for('RoomView', id=bulbs[0].room_id) }}"
+                                class="self-end"
+                        >
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                                {{ room_name }}
+                            </h2>
+                        </a>
+                        {% call card_grid(bulbs, 'BulbView') %}
+                            {{ spinner(htmx_indicator=False) }}
+                        {% endcall %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
 {% endblock content %}

@@ -1,11 +1,8 @@
 import re
 
-from markupsafe import Markup
-from multidict import MultiDict
-from sanic import Request
-from wtforms import Form, SelectField, StringField, validators, TextAreaField
+from wtforms import Form, SelectField, StringField, validators
 
-from .form_helpers import get_styled_label, get_input_classes
+from .helpers import get_input_classes, get_styled_label
 
 
 class BulbForm(Form):
@@ -38,27 +35,4 @@ class BulbForm(Form):
         coerce=str,
         default="",
         render_kw={"class": get_input_classes()},
-    )
-
-
-class RoomForm(Form):
-    name = StringField(
-        get_styled_label("Nazwa", "name"),
-        [
-            validators.Length(
-                min=1, max=128, message="Nazwa musi mieć od 1 do 128 znaków"
-            ),
-            validators.InputRequired(),
-        ],
-        render_kw={"class": get_input_classes()},
-    )
-    description = TextAreaField(
-        get_styled_label("Opis", "description"),
-        [
-            validators.Optional(),
-            validators.Length(
-                min=1, max=128, message="Opis musi mieć od 1 do 128 znaków"
-            ),
-        ],
-        render_kw={"placeholder": "...", "class": get_input_classes()},
     )

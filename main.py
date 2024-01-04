@@ -1,12 +1,11 @@
-from functools import partial
-from typing import Optional, Any, Callable
+from typing import Any, Callable
 
 from sanic import Sanic
 from sanic.response import redirect
 from sanic.worker.loader import AppLoader
 from tortoise.contrib.sanic import register_tortoise
 
-import src.logging
+import src.logger  # noqa
 from src.settings import SETTINGS
 from src.views import create_views
 
@@ -31,24 +30,33 @@ def apply_static_redirects(app: Sanic):
         app.route(src_)(handler)
 
 
-def create_app(app_name: str = "smart-home") -> Sanic:
-    app = Sanic(app_name)
+def create_app() -> Sanic:
+    app = Sanic("smart-home")
     app.config.TEMPLATING_ENABLE_ASYNC = True
+
     attach_endpoints(app)
     serve_static_files(app)
     apply_static_redirects(app)
+
     register_tortoise(
         app,
         db_url=str(SETTINGS.db_url),
-        modules={"models": ["src.models"]},
+        modules={
+            "models": [
+                "src.models.bulb",
+                "src.models.room",
+                "src.models.icon",
+                "src.models.setting",
+            ]
+        },
         generate_schemas=True,
     )
+
     return app
 
 
 if __name__ == "__main__":
-    app_name = "smart-home"
-    loader = AppLoader(factory=partial(create_app, app_name))
+    loader = AppLoader(factory=create_app)
     app = loader.load()
     app.prepare(host="0.0.0.0", port=8080)
     Sanic.serve(primary=app, app_loader=loader)
