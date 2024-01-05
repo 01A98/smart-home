@@ -92,4 +92,39 @@ def create_view(app: Sanic) -> None:
             await Bulb.filter(id=id_).delete()
             return redirect(app.url_for("BulbsView"), status=303)
 
+    async def get_bulb_with_wiz_info(request: Request, id: int):
+        bulb = await Bulb.get(id=id)
+
+        await bulb.assign_wiz_info()
+
+        context = dict(bulb=bulb)
+        context["with_name"] = request.args.get("with_name", False)
+
+        return await render("views/bulbs/:id/bulb-info.html", context=context)
+
+    async def toggle_bulb_state(request: Request, id: int):
+        state = request.form.get("bulb_state_value")
+        bulb_state = None
+        if state == "True":
+            bulb_state = True
+        elif state == "False":
+            bulb_state = False
+
+        bulb = await Bulb.get(id=id)
+        await bulb.toggle_state(not bulb_state)
+        return await render(
+            "views/bulbs/:id/bulb-state-toggle-form.html", context=dict(bulb=bulb)
+        )
+
     app.add_route(BulbView.as_view(), "/bulbs/<id:strorempty>")
+    app.add_route(
+        get_bulb_with_wiz_info,
+        "bulbs/<id:int>/wiz-info",
+        name="bulb_with_wiz_info",
+    )
+    app.add_route(
+        toggle_bulb_state,
+        "bulbs/<id:int>/toggle-state",
+        name="toggle_bulb_state",
+        methods=["POST"],
+    )

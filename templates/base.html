@@ -84,6 +84,7 @@
 <body
         hx-ext="head-support"
         hx-boost="true"
+        class="w-full flex flex-col items-center"
 >
 {% from "./macros/navbar.html" import navbar %}
 {{ navbar(url_for("HomeView"), navigation, current_page) }}

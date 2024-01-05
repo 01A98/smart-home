@@ -3,7 +3,7 @@ import json
 import logging
 from typing import ByteString, Callable, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from tenacity import (
     retry_if_exception_type,
     stop_after_delay,
@@ -81,7 +81,7 @@ class BulbParameters(BaseModel):
     ratio: Optional[int] = Field(
         default=None, ge=0, le=100, description="Ratio for dual-zone devices"
     )
-    state: bool = Field(..., alias="on", description="State of the device")
+    state: bool = Field(..., description="State of the device")
     temp: Optional[int] = Field(
         default=None,
         alias="temperature",
@@ -89,12 +89,6 @@ class BulbParameters(BaseModel):
         le=6500,
         description="CCT value, measured in Kelvins",
     )
-
-    @validator("state", pre=False)
-    def bool_to_on_or_off(cls, val):
-        if val is None:
-            return val
-        return "on" if val else "off"
 
 
 class WizMessage(BaseModel):
@@ -125,12 +119,6 @@ class WizGetResult(BaseModel):
     )
     schdPsetId: Optional[int] = Field(default=None, description="Rhythm ID of the room")
 
-    @validator("state", pre=False)
-    def bool_to_on_or_off(cls, val):
-        if val is None:
-            return val
-        return "on" if val else "off"
-
 
 class WizSetResult(BaseModel):
     success: bool = Field(..., description="Success status of the setPilot method")
@@ -155,11 +143,11 @@ class WizResponse(BaseModel):
 
 
 MESSAGES = {
-    "ON": WizMessage(params=BulbParameters(on=True)),
-    "OFF": WizMessage(params=BulbParameters(on=False)),
+    "ON": WizMessage(params=BulbParameters(state=True)),
+    "OFF": WizMessage(params=BulbParameters(state=False)),
     "INFO": WizMessage(method="getPilot"),
-    "WARM": WizMessage(params=BulbParameters(on=True, temperature=2200)),
-    "COLD": WizMessage(params=BulbParameters(on=True, temperature=6500)),
+    "WARM": WizMessage(params=BulbParameters(state=True, temperature=2200)),
+    "COLD": WizMessage(params=BulbParameters(state=True, temperature=6500)),
 }
 
 ParsedBulbResponse = Tuple[
