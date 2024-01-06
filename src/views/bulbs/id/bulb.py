@@ -6,12 +6,12 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from wiz import BulbParameters, WizMessage
 from ... import Page, PageContext
 from ....forms.bulb import BulbForm
 from ....forms.helpers import get_choices, get_formdata
 from ....models.bulb import Bulb
 from ....models.room import Room
+from ....wiz import BulbParameters, WizMessage
 
 
 def create_view(app: Sanic) -> None:

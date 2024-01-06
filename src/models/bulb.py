@@ -12,10 +12,10 @@ from ..wiz import send_message_to_wiz, MESSAGES, WizMessage
 class Bulb(Model, TimestampMixin, GetItemMixin):
     ip = CharField(validators=[validate_ipv4_address], max_length=15, unique=True)
     name = CharField(max_length=128)
-    room: ForeignKeyRelation[Room] | None = ForeignKeyField(
+    room: [ForeignKeyRelation[Room], None] = ForeignKeyField(
         "models.Room", null=True, on_delete=SET_NULL
     )
-    icon: ForeignKeyRelation[Icon] | None = ForeignKeyField(
+    icon: [ForeignKeyRelation[Icon], None] = ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL
     )
 

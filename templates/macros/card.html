@@ -1,7 +1,7 @@
 {% macro card(record, pk='id') %}
     <div
             id="card-item-{{ record[pk] }}"
-            class="my-8 rounded-md text-white bg-indigo-700 hover:bg-pink-700 flex flex-col shadow-gray-200 dark:shadow-gray-900  duration-300 hover:-translate-y-1"
+            class="my-8 min-w-fit rounded-md text-white bg-indigo-700 hover:bg-pink-700 flex flex-col shadow-gray-200 dark:shadow-gray-900  duration-300 hover:-translate-y-1"
     >
         {{ caller() }}
     </div>

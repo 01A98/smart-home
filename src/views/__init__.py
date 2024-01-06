@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from sanic import Sanic
 
 from src.settings import SETTINGS, Settings
-from src.utils import get_js_file
 
 
 class Page(BaseModel):
@@ -21,7 +20,6 @@ NAVIGATION: dict[str, Page] = {}
 class PageContext(BaseModel):
     current_page: Optional[Page] = None
     navigation: dict[str, Page] = NAVIGATION
-    base_js: str = get_js_file(ts_filepath="base.ts")
     settings: Settings = SETTINGS
 
     class Config:

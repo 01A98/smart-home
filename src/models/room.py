@@ -1,3 +1,5 @@
+from typing import Union
+
 from tortoise.contrib.pydantic.creator import pydantic_model_creator
 from tortoise.fields import (
     SET_NULL,
@@ -17,7 +19,7 @@ class Room(Model, TimestampMixin, GetItemMixin):
     name = CharField(max_length=128, unique=True)
     description = TextField(null=True)
     is_favorite = BooleanField(default=False)
-    icon: ForeignKeyRelation[Icon] | None = ForeignKeyField(
+    icon: Union[ForeignKeyRelation[Icon], None] = ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL
     )
 

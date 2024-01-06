@@ -20,9 +20,9 @@ TIMEOUT = 2
 
 class WizProtocol(asyncio.DatagramProtocol):
     def __init__(
-        self,
-        on_response: Optional[Callable[[bytes, Tuple[str, int]], None]] = None,
-        on_error: Optional[Callable[[Optional[Exception]], None]] = None,
+            self,
+            on_response: Optional[Callable[[bytes, Tuple[str, int]], None]] = None,
+            on_error: Optional[Callable[[Optional[Exception]], None]] = None,
     ) -> None:
         """Init the protocol."""
         self.on_response = on_response
@@ -156,8 +156,8 @@ ParsedBulbResponse = Tuple[
 
 
 def parse_bulb_response(
-    response_message: ByteString,
-    wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
+        response_message: ByteString,
+        wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
 ):
     response_data = json.loads(response_message)
     error = response_data.get("error")
@@ -174,10 +174,10 @@ def parse_bulb_response(
 
 
 async def get_transport(
-    event_loop: asyncio.AbstractEventLoop,
-    response_future: asyncio.Future,
-    ip: str = "192.168.1.255",
-    port: int = UDP_PORT,
+        event_loop: asyncio.AbstractEventLoop,
+        response_future: asyncio.Future,
+        ip: str = "192.168.1.255",
+        port: int = UDP_PORT,
 ):
     transport, _protocol = await event_loop.create_datagram_endpoint(
         lambda: WizProtocol(
@@ -192,8 +192,8 @@ async def get_transport(
 
 
 async def send_message_to_wiz(
-    ip: str, message: WizMessage = MESSAGES["INFO"]
-) -> tuple[None, WizSetResult | WizGetResult] | tuple[str | WizError, None]:
+        ip: str, message: WizMessage = MESSAGES["INFO"]
+) -> Union[tuple[Union[None, WizSetResult, WizGetResult]], tuple[Union[str, WizError], None]]:
     no_response_error_message = "Bulb offline"
     message_bytes = message.model_dump_json(
         exclude_none=True,
@@ -205,9 +205,9 @@ async def send_message_to_wiz(
     try:
         transport.sendto(message_bytes, (ip, UDP_PORT))
         async for attempt in AsyncRetrying(
-            retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
-            wait=wait_fixed(0.1),  # 100ms
-            stop=stop_after_delay(TIMEOUT),
+                retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
+                wait=wait_fixed(0.1),  # 100ms
+                stop=stop_after_delay(TIMEOUT),
         ):
             with attempt:
                 response_message, _addr = response_future.result()

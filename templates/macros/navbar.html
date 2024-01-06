@@ -62,7 +62,7 @@
             <ul
                     id="menu-items"
                     x-bind:class="{ 'hidden': !open }"
-                    class="mt-4 flex hidden w-full flex-col justify-center rounded-lg border border-gray-300 bg-gray-50 p-4 font-medium dark:border-gray-700 dark:bg-gray-800 md:mt-0 md:flex md:flex-row md:space-x-8 md:border-0 md:bg-white md:p-0 md:dark:bg-gray-900"
+                    class="mt-4 flex hidden w-full flex-col justify-center rounded-lg border border-gray-300 bg-gray-50 p-4 font-medium dark:border-gray-700 dark:bg-gray-800 md:mt-0 md:flex md:flex-row md:space-x-8 md:border-0 md:p-0 md:dark:bg-gray-900"
             >
                 {% for page in navigation.values() %}
                     <li>
@@ -70,10 +70,10 @@
                                 pageName="{{ page['name'] }}"
                                 href="{{ url_for(page['name']) }}"
                                 x-bind:class="{
-          'bg-blue-700 dark:text-white text-white md:text-blue-700 md:dark:text-blue-500': currentPageName === $el.getAttribute('pageName'),
+          'bg-blue-700 text-white md:text-blue-500 dark:md:text-blue-500': currentPageName === $el.getAttribute('pageName'),
         }"
                                 class="transition duration-200 hover:-translate-y-[2px] focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium px-5 text-center dark:focus:ring-primary-900 block rounded py-2 text-gray-900 dark:text-white md:bg-transparent md:p-0
-        {{ 'bg-blue-700 dark:text-white md:text-blue-700 md:dark:text-blue-500'
+        {{ 'bg-blue-700 text-white md:text-blue-500 dark:md:text-blue-500'
             if current_page and current_page['name'] == page['name'] 
             else '' }}"
                         >
