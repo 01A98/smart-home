@@ -57,6 +57,6 @@ def create_app() -> Sanic:
 
 if __name__ == "__main__":
     loader = AppLoader(factory=create_app)
-    app = loader.load()
-    app.prepare(host="0.0.0.0", port=8080)
-    Sanic.serve(primary=app, app_loader=loader)
+    loaded_app = loader.load()
+    loaded_app.prepare(host="0.0.0.0", port=8080)
+    Sanic.serve(primary=loaded_app, app_loader=loader)

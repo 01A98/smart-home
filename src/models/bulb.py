@@ -6,7 +6,7 @@ from tortoise.validators import validate_ipv4_address
 from .helpers import GetItemMixin, TimestampMixin
 from .icon import Icon
 from .room import Room
-from ..wiz import send_message_to_wiz, MESSAGES
+from ..wiz import send_message_to_wiz, MESSAGES, WizMessage
 
 
 class Bulb(Model, TimestampMixin, GetItemMixin):
@@ -33,6 +33,10 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
             self.ip, message=MESSAGES["ON"] if state else MESSAGES["OFF"]
         )
         self.wiz_info = error if error else {"state": state}
+
+    async def send_message(self, message: WizMessage) -> None:
+        error, res = await send_message_to_wiz(self.ip, message=message)
+        self.wiz_info = error if error else res.model_dump()
 
 
 Bulb_Py = pydantic_model_creator(Bulb, name="Bulb")
