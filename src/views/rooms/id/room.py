@@ -1,6 +1,7 @@
 from sanic import BadRequest, Request, Sanic
 from sanic.response import redirect
 from sanic.views import HTTPMethodView
+from sanic_ext import render
 from tortoise.transactions import atomic
 
 from ... import Page, PageContext
@@ -70,4 +71,29 @@ def create_view(app: Sanic) -> None:
             if form.errors:
                 raise BadRequest(str(form.errors.items()))
 
+    async def toggle_room_state(request: Request, id: int):
+        # TODO: this is outdated now, make consistent with other forms
+        previous_state = request.form.get("room_state_value")
+        updated_state = request.form.get("room_state", default=None)
+        bulb_state = None
+
+        if previous_state is not None and updated_state is None:
+            bulb_state = not previous_state
+        if previous_state == "False" and updated_state is not None:
+            bulb_state = True
+
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.toggle_state(bulb_state)
+
+        return await render(
+            "views/rooms/room-state-toggle-form.html",
+            context=dict(room=room),
+        )
+
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
+    app.add_route(
+        toggle_room_state,
+        "rooms/<id:int>/toggle-state",
+        name="toggle_room_state",
+        methods=["POST"],
+    )

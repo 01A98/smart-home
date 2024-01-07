@@ -1,3 +1,5 @@
+import asyncio
+
 from sanic import Request, Sanic
 from sanic.views import HTTPMethodView
 from sanic_ext import render
@@ -18,6 +20,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.all().prefetch_related("bulbs")
+            await asyncio.gather(*[room.assign_room_state() for room in rooms])
             return await render(
                 self.page.template_path,
                 context={

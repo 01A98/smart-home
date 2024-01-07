@@ -1,6 +1,6 @@
 import random
 
-from sanic import BadRequest, Request, Sanic, html, json
+from sanic import BadRequest, Request, Sanic, html, json, text
 from sanic.response import redirect
 from sanic.views import HTTPMethodView
 from sanic_ext import render
@@ -8,7 +8,12 @@ from tortoise.transactions import atomic
 
 from ... import Page, PageContext
 from ....forms.bulb import BulbDetailsForm, bulb_control_form_factory
-from ....forms.helpers import get_choices, get_formdata
+from ....forms.helpers import (
+    get_choices,
+    get_formdata,
+    coerce_literal_bool_to_bool,
+    coerce_rgb_string_to_tuple,
+)
 from ....models.bulb import Bulb
 from ....models.room import Room
 from ....wiz import BulbParameters, WizMessage
@@ -56,7 +61,8 @@ def create_view(app: Sanic) -> None:
                 context["bulb"] = bulb
 
                 BulbControlForm = bulb_control_form_factory(bulb, app)
-                context["control_form"] = BulbControlForm()
+                control_form = BulbControlForm()
+                context["control_form"] = control_form
 
             return await render(
                 self.template_path,
@@ -115,46 +121,64 @@ def create_view(app: Sanic) -> None:
         BulbControlForm = bulb_control_form_factory(bulb, app)
         control_form = BulbControlForm(get_formdata(request))
 
-        if control_form.validate():
-            red, green, blue = tuple(
-                int(control_form.color.data.replace("#", "")[i : i + 2], 16)
-                for i in (0, 2, 4)
-            )
+        if request.method == "POST":
+            if control_form.validate():
+                previous_state = coerce_literal_bool_to_bool(
+                    control_form.previous_state.data
+                )
+                if (
+                    previous_state == control_form.updated_state.data
+                    and control_form.updated_state.data is False
+                ):
+                    return text("No changes", headers={"HX-Reswap": "none"}, status=204)
 
-            previous_state = control_form.state_value.data
-            updated_state = control_form.state.data
-            bulb_state = True if previous_state == "y" else False
+                red, green, blue = coerce_rgb_string_to_tuple(control_form.color.data)
 
-            if previous_state == "n" and updated_state == "y":
-                bulb_state = True
-            elif previous_state == "y" and updated_state == "n":
-                bulb_state = False
-
-            await bulb.send_message(
-                WizMessage(
-                    params=BulbParameters(
-                        state=bulb_state,
-                        red=red,
-                        green=green,
-                        blue=blue,
-                        brightness=int(control_form.brightness.data),
-                        temperature=int(control_form.temperature.data),
+                await bulb.send_message(
+                    WizMessage(
+                        params=BulbParameters(
+                            state=control_form.updated_state.data,
+                            red=red,
+                            green=green,
+                            blue=blue,
+                            brightness=control_form.brightness.data,
+                            temperature=control_form.temperature.data,
+                        )
                     )
                 )
-            )
 
-            control_form.state.default = "y" if bulb.wiz_info["state"] else "n"
-            # control_form.color.default = bulb.wiz_info["color"]  # TODO
-            control_form.brightness.default = bulb.wiz_info["dimming"]  # TODO
-            control_form.temperature.default = bulb.wiz_info["temp"]  # TODO
-            control_form.process()
+                await bulb.assign_wiz_info()
 
+                return await render(
+                    "views/bulbs/:id/bulb-control-form.html",
+                    headers={"HX-Trigger-After-Settle": f"reload-bulb-{id}-control"},
+                    context=dict(
+                        bulb=bulb,
+                        control_form=await _process_control_form(bulb, request),
+                    ),
+                )
+
+            if control_form.errors:
+                raise BadRequest(str(control_form.errors.items()))
+        if request.method == "GET":
+            await bulb.assign_wiz_info()
             return await render(
                 "views/bulbs/:id/bulb-control-form.html",
-                context=dict(bulb=bulb, control_form=control_form),
+                context=dict(
+                    bulb=bulb,
+                    control_form=await _process_control_form(bulb, request),
+                ),
             )
-        if control_form.errors:
-            raise BadRequest(str(control_form.errors.items()))
+
+    async def _process_control_form(bulb, request):
+        BulbControlForm = bulb_control_form_factory(bulb, app)
+        control_form = BulbControlForm(get_formdata(request))
+        control_form.previous_state.default = (
+            "True" if bulb.wiz_info["state"] else "False"
+        )
+        control_form.updated_state.default = bulb.wiz_info["state"]
+        control_form.process()
+        return control_form
 
     async def toggle_bulb_state(request: Request, id: int):
         # TODO: this is outdated now, make consistent with other forms
@@ -191,7 +215,10 @@ def create_view(app: Sanic) -> None:
                 )
             )
         )
-        return json(bulb.wiz_info)
+        return json(
+            bulb.wiz_info,
+            headers={"HX-Trigger": f"reload-bulb-{bulb.id}-control-form"},
+        )
 
     async def get_bulb_icon(request: Request, id: int):
         bulb = await Bulb.get(id=id)
@@ -225,7 +252,10 @@ def create_view(app: Sanic) -> None:
 
     app.add_route(BulbView.as_view(), "/bulbs/<id:strorempty>")
     app.add_route(
-        control_bulb, "/bulbs/<id:int>/control", name="bulb_control", methods=["POST"]
+        control_bulb,
+        "/bulbs/<id:int>/control",
+        name="bulb_control",
+        methods=["POST", "GET"],
     )
     app.add_route(
         get_bulb_with_wiz_info,

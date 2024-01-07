@@ -41,9 +41,9 @@ def get_formdata(request: Request):
 
 
 def get_choices(
-        records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
-        option_value_field: str = "name",
-        is_optional: bool = True,
+    records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
+    option_value_field: str = "name",
+    is_optional: bool = True,
 ) -> list[tuple[int, str]]:
     choices = []
     if is_optional:
@@ -53,3 +53,29 @@ def get_choices(
         choices.append((record.pk, record[option_value_field]))
 
     return choices
+
+
+def coerce_literal_bool_to_bool(value: str) -> bool:
+    if value == "True":
+        return True
+    elif value == "False":
+        return False
+    else:
+        raise ValueError("Invalid literal for bool() with base 10: '{}'".format(value))
+
+
+def coerce_rgb_string_to_tuple(value: str) -> tuple[int, int, int]:
+    if value.startswith("#"):
+        value = value[1:]
+    if len(value) != 6:
+        raise ValueError("Invalid literal for rgb() with base 10: '{}'".format(value))
+    red = int(value[0:2], 16)
+    green = int(value[2:4], 16)
+    blue = int(value[4:6], 16)
+    return red, green, blue
+
+
+def coerce_wiz_info_to_rgb_string(wiz_info) -> str:
+    if not wiz_info:
+        return "#ffffff"
+    return f"#{wiz_info["r"]:02x}{wiz_info["g"]:02x}{wiz_info["b"]:02x}"

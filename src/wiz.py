@@ -20,9 +20,9 @@ TIMEOUT = 2
 
 class WizProtocol(asyncio.DatagramProtocol):
     def __init__(
-            self,
-            on_response: Optional[Callable[[bytes, Tuple[str, int]], None]] = None,
-            on_error: Optional[Callable[[Optional[Exception]], None]] = None,
+        self,
+        on_response: Optional[Callable[[bytes, Tuple[str, int]], None]] = None,
+        on_error: Optional[Callable[[Optional[Exception]], None]] = None,
     ) -> None:
         """Init the protocol."""
         self.on_response = on_response
@@ -104,6 +104,25 @@ class WizGetResult(BaseModel):
     mac: Optional[str] = Field(description="MAC address of the bulb")
     rssi: Optional[int] = Field(description="Signal strength of the bulb")
     src: Optional[str] = Field(description="Source of the message")
+    r: Optional[int] = Field(default=None, ge=0, le=255, description="Red track value")
+    g: Optional[int] = Field(
+        default=None, ge=0, le=255, description="Green track value"
+    )
+    b: Optional[int] = Field(default=None, ge=0, le=255, description="Blue track value")
+    c: Optional[int] = Field(
+        default=None,
+        alias="cold_white",
+        ge=0,
+        le=255,
+        description="Cold white track value",
+    )
+    w: Optional[int] = Field(
+        default=None,
+        alias="warm_white",
+        ge=0,
+        le=255,
+        description="Warm white track value",
+    )
     state: Optional[bool] = Field(description="State of the bulb (on/off)")
     sceneId: Optional[int] = Field(
         default=None, ge=0, le=32, description="Predefined scene ID"
@@ -156,8 +175,8 @@ ParsedBulbResponse = Tuple[
 
 
 def parse_bulb_response(
-        response_message: ByteString,
-        wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
+    response_message: ByteString,
+    wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
 ):
     response_data = json.loads(response_message)
     error = response_data.get("error")
@@ -174,10 +193,10 @@ def parse_bulb_response(
 
 
 async def get_transport(
-        event_loop: asyncio.AbstractEventLoop,
-        response_future: asyncio.Future,
-        ip: str = "192.168.1.255",
-        port: int = UDP_PORT,
+    event_loop: asyncio.AbstractEventLoop,
+    response_future: asyncio.Future,
+    ip: str = "192.168.1.255",
+    port: int = UDP_PORT,
 ):
     transport, _protocol = await event_loop.create_datagram_endpoint(
         lambda: WizProtocol(
@@ -192,8 +211,10 @@ async def get_transport(
 
 
 async def send_message_to_wiz(
-        ip: str, message: WizMessage = MESSAGES["INFO"]
-) -> Union[tuple[Union[None, WizSetResult, WizGetResult]], tuple[Union[str, WizError], None]]:
+    ip: str, message: WizMessage = MESSAGES["INFO"]
+) -> Union[
+    tuple[Union[None, WizSetResult, WizGetResult]], tuple[Union[str, WizError], None]
+]:
     no_response_error_message = "Bulb offline"
     message_bytes = message.model_dump_json(
         exclude_none=True,
@@ -205,9 +226,9 @@ async def send_message_to_wiz(
     try:
         transport.sendto(message_bytes, (ip, UDP_PORT))
         async for attempt in AsyncRetrying(
-                retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
-                wait=wait_fixed(0.1),  # 100ms
-                stop=stop_after_delay(TIMEOUT),
+            retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
+            wait=wait_fixed(0.1),  # 100ms
+            stop=stop_after_delay(TIMEOUT),
         ):
             with attempt:
                 response_message, _addr = response_future.result()

@@ -4,7 +4,7 @@
         method="POST"
         action="{{ url_for('bulb_control', id=bulb.id) }}"
         class="max-w-sm mx-auto flex flex-col justify-center w-full"
-        hx-target="#bulb-details-form"
+        hx-target="#bulb-control-form"
         hx-swap="innerHTML"
 >
     <div class="mb-5">
@@ -14,15 +14,19 @@
                        for="bulb-{{ bulb.id }}-random-color">Losowy
                     Kolor</label>
                 {{ bulb_random_color_button(bulb) }}
+                <div hx-trigger="reload-bulb-{{ bulb.id }}-control-form from:body"
+                     hx-target="#bulb-control-form"
+                     hx-swap="innerHTML"
+                     hx-get="{{ url_for('bulb_control', id=bulb.id) }}"></div>
             </div>
             <div>
                 {{ control_form.color.label.text | safe }}
                 {{ control_form.color }}
             </div>
             <div>
-                {{ control_form.state.label.text | safe }}
-                {{ control_form.state }}
-                {{ control_form.state_value }}
+                {{ control_form.updated_state.label.text | safe }}
+                {{ control_form.updated_state }}
+                {{ control_form.previous_state }}
             </div>
         </div>
     </div>

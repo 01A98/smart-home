@@ -1,10 +1,9 @@
 import re
-from decimal import Decimal
 
 import wtforms
 from sanic import Sanic
 
-from .helpers import get_input_classes, get_styled_label
+from .helpers import get_input_classes, get_styled_label, coerce_wiz_info_to_rgb_string
 from ..models.bulb import Bulb
 
 
@@ -42,32 +41,20 @@ class BulbDetailsForm(wtforms.Form):
 
 
 def bulb_control_form_factory(bulb: Bulb, app: Sanic):
-    bulb_state_value = None
-    if bulb.wiz_info:
-        if bulb.wiz_info["state"] is False:
-            bulb_state_value = "n"
-        elif bulb.wiz_info["state"] is True:
-            bulb_state_value = "y"
-
     class BulbControlForm(wtforms.Form):
-        state = wtforms.BooleanField(
+        updated_state = wtforms.BooleanField(
             get_styled_label("Włączona", "state"),
+            default=bulb.wiz_info and bulb.wiz_info["state"],
             render_kw={
                 "toggle": "true",
                 "class": "scale-[1.5] origin-left pt-2",
                 "hx-post": app.url_for("bulb_control", id=bulb.id),
-                "hx-target": "#bulb-details-form",
+                "hx-target": "#bulb-control-form",
                 "hx-swap": "innerHTML",
             },
-            **({"default": "y"} if bulb_state_value == "y" else {}),
         )
-        state_value = wtforms.HiddenField(
-            validators=[
-                wtforms.validators.InputRequired(),
-            ],
-            default="n"
-            if bulb_state_value == "y"
-            else "y",  # reverse bc it's a reference field for state
+        previous_state = wtforms.HiddenField(
+            default=bulb.wiz_info and bulb.wiz_info["state"],
         )
         color = wtforms.ColorField(
             get_styled_label("Kolor", "color"),
@@ -76,12 +63,18 @@ def bulb_control_form_factory(bulb: Bulb, app: Sanic):
                     re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$"),
                     message="Niepoprawny kolor",
                 ),
-                wtforms.validators.InputRequired(),
+                wtforms.validators.Optional(),
             ],
+            default=lambda: coerce_wiz_info_to_rgb_string(bulb.wiz_info),
             render_kw={
                 "hx-post": app.url_for("bulb_control", id=bulb.id),
-                "hx-target": "#bulb-details-form",
+                "hx-target": "#bulb-control-form",
                 "hx-swap": "innerHTML",
+                **(
+                    {"disabled": "true"}
+                    if bulb.wiz_info and bulb.wiz_info.get("r") is None
+                    else {}
+                ),
                 "class": "p-2 h-10 w-14 block bg-white border "
                 "scale-[1.25] "
                 "border-gray-200 cursor-pointer w-10 rounded-lg "
@@ -89,7 +82,7 @@ def bulb_control_form_factory(bulb: Bulb, app: Sanic):
                 "dark:bg-slate-900 dark:border-gray-700",
             },
         )
-        brightness = wtforms.DecimalRangeField(
+        brightness = wtforms.IntegerRangeField(
             get_styled_label("Jasność", "brightness"),
             [
                 wtforms.validators.NumberRange(
@@ -98,32 +91,38 @@ def bulb_control_form_factory(bulb: Bulb, app: Sanic):
                     message="Zakres jasności od 10 do 100 (z krokiem 10)",
                 ),
             ],
-            default=Decimal(bulb.wiz_info["dimming"] if bulb.wiz_info else 100),
+            default=bulb.wiz_info and bulb.wiz_info["dimming"],
             render_kw={
                 "hx-post": app.url_for("bulb_control", id=bulb.id),
-                "hx-target": "#bulb-details-form",
+                "hx-target": "#bulb-control-form",
                 "hx-swap": "innerHTML",
                 "step": 10,
                 "list": "brightness-list",
                 "class": "accent-blue-500 origin-left scale-[2.0] w-1/2",
             },
         )
-        temperature = wtforms.DecimalRangeField(
+        temperature = wtforms.IntegerRangeField(
             get_styled_label("Temperatura", "temperature"),
             [
+                wtforms.validators.Optional(),
                 wtforms.validators.NumberRange(
                     min=2200,
                     max=6500,
                     message="Zakres temperatury od 2200 do 6500",
                 ),
             ],
-            default=Decimal(bulb.wiz_info["temp"] if bulb.wiz_info else 4250),
+            default=bulb.wiz_info and bulb.wiz_info["temp"],
             render_kw={
                 "hx-post": app.url_for("bulb_control", id=bulb.id),
-                "hx-target": "#bulb-details-form",
+                "hx-target": "#bulb-control-form",
                 "hx-swap": "innerHTML",
                 "list": "temperature-list",
                 "class": "accent-blue-500 origin-left scale-[2.0] w-1/2",
+                **(
+                    {"disabled": "true"}
+                    if bulb.wiz_info and bulb.wiz_info.get("temp") is None
+                    else {}
+                ),
             },
         )
 
