@@ -32,11 +32,11 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
         error, res = await send_message_to_wiz(
             self.ip, message=MESSAGES["ON"] if state else MESSAGES["OFF"]
         )
-        self.wiz_info = error if error else {"state": state}
+        await self.assign_wiz_info()
 
     async def send_message(self, message: WizMessage) -> None:
         error, res = await send_message_to_wiz(self.ip, message=message)
-        self.wiz_info = error if error else res.model_dump()
+        await self.assign_wiz_info()
 
 
 Bulb_Py = pydantic_model_creator(Bulb, name="Bulb")

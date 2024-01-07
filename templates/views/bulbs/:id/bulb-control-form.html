@@ -1,0 +1,47 @@
+{% from "./macros/bulb-random-color-button.html" import bulb_random_color_button %}
+<form
+        id="control-form"
+        method="POST"
+        action="{{ url_for('bulb_control', id=bulb.id) }}"
+        class="max-w-sm mx-auto flex flex-col justify-center w-full"
+        hx-target="#bulb-details-form"
+        hx-swap="innerHTML"
+>
+    <div class="mb-5">
+        <div class="flex flex-row justify-between items-start">
+            <div class="flex flex-col items-center">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                       for="bulb-{{ bulb.id }}-random-color">Losowy
+                    Kolor</label>
+                {{ bulb_random_color_button(bulb) }}
+            </div>
+            <div>
+                {{ control_form.color.label.text | safe }}
+                {{ control_form.color }}
+            </div>
+            <div>
+                {{ control_form.state.label.text | safe }}
+                {{ control_form.state }}
+                {{ control_form.state_value }}
+            </div>
+        </div>
+    </div>
+    <div class="mb-5">
+        {{ control_form.brightness.label.text | safe }}
+        {{ control_form.brightness }}
+        <datalist id="brightness-list"
+                  class="flex flex-row justify-between w-full dark:text-white text-gray-900">
+            <option value="0" label="0%"></option>
+            <option value="100" label="100%"></option>
+        </datalist>
+    </div>
+    <div class="mb-5 w-full">
+        {{ control_form.temperature.label.text | safe }}
+        {{ control_form.temperature }}
+        <datalist id="temperature-list"
+                  class="flex flex-row justify-between w-full dark:text-white text-gray-900">
+            <option value="0" label="2200K"></option>
+            <option value="100" label="6500K"></option>
+        </datalist>
+    </div>
+</form>

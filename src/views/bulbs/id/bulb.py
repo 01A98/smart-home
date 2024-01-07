@@ -7,7 +7,7 @@ from sanic_ext import render
 from tortoise.transactions import atomic
 
 from ... import Page, PageContext
-from ....forms.bulb import BulbForm
+from ....forms.bulb import BulbDetailsForm, bulb_control_form_factory
 from ....forms.helpers import get_choices, get_formdata
 from ....models.bulb import Bulb
 from ....models.room import Room
@@ -37,31 +37,35 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request, id: str):
             context = PageContext(current_page=self.page(id)).model_dump()
-            form = BulbForm()
+            details_form = BulbDetailsForm()
             choices = get_choices(await Room.all(), "name")
-            form.room.choices = choices  # type: ignore
+            details_form.room.choices = choices  # type: ignore
 
             if id == "new":
                 context["new"] = True
             else:
                 id_ = int(id)
                 bulb = await Bulb.get(id=id_).prefetch_related("room")
+                await bulb.assign_wiz_info()
 
-                form.name.default = bulb.name
-                form.ip_address.default = bulb.ip
-                form.room.default = bulb.room_id
-                form.process()
+                details_form.name.default = bulb.name
+                details_form.ip_address.default = bulb.ip
+                details_form.room.default = bulb.room_id
+                details_form.process()
 
                 context["bulb"] = bulb
 
+                BulbControlForm = bulb_control_form_factory(bulb, app)
+                context["control_form"] = BulbControlForm()
+
             return await render(
                 self.template_path,
-                context=dict(form=form, **context),
+                context=dict(details_form=details_form, **context),
             )
 
         @staticmethod
         async def post(request: Request, id: str):
-            form = BulbForm(get_formdata(request))
+            form = BulbDetailsForm(get_formdata(request))
             form.room.choices = get_choices(await Room.all(), "name")  # type: ignore
 
             if form.validate():
@@ -75,7 +79,7 @@ def create_view(app: Sanic) -> None:
 
         @staticmethod
         async def patch(request: Request, id: str):
-            form = BulbForm(get_formdata(request))
+            form = BulbDetailsForm(get_formdata(request))
             form.room.choices = get_choices(await Room.all(), "name")  # type: ignore
             id_ = int(id)
 
@@ -106,16 +110,68 @@ def create_view(app: Sanic) -> None:
 
         return await render("views/bulbs/:id/bulb-info.html", context=context)
 
+    async def control_bulb(request: Request, id: int):
+        bulb = await Bulb.get(id=id)
+        BulbControlForm = bulb_control_form_factory(bulb, app)
+        control_form = BulbControlForm(get_formdata(request))
+
+        if control_form.validate():
+            red, green, blue = tuple(
+                int(control_form.color.data.replace("#", "")[i : i + 2], 16)
+                for i in (0, 2, 4)
+            )
+
+            previous_state = control_form.state_value.data
+            updated_state = control_form.state.data
+            bulb_state = True if previous_state == "y" else False
+
+            if previous_state == "n" and updated_state == "y":
+                bulb_state = True
+            elif previous_state == "y" and updated_state == "n":
+                bulb_state = False
+
+            await bulb.send_message(
+                WizMessage(
+                    params=BulbParameters(
+                        state=bulb_state,
+                        red=red,
+                        green=green,
+                        blue=blue,
+                        brightness=int(control_form.brightness.data),
+                        temperature=int(control_form.temperature.data),
+                    )
+                )
+            )
+
+            control_form.state.default = "y" if bulb.wiz_info["state"] else "n"
+            # control_form.color.default = bulb.wiz_info["color"]  # TODO
+            control_form.brightness.default = bulb.wiz_info["dimming"]  # TODO
+            control_form.temperature.default = bulb.wiz_info["temp"]  # TODO
+            control_form.process()
+
+            return await render(
+                "views/bulbs/:id/bulb-control-form.html",
+                context=dict(bulb=bulb, control_form=control_form),
+            )
+        if control_form.errors:
+            raise BadRequest(str(control_form.errors.items()))
+
     async def toggle_bulb_state(request: Request, id: int):
-        state = request.form.get("bulb_state_value")
+        # TODO: this is outdated now, make consistent with other forms
+        previous_state = request.form.get("bulb_state_value")
+        updated_state = request.form.get("bulb_state", default=None)
         bulb_state = None
-        if state == "True":
+
+        if previous_state is not None and updated_state is None:
+            bulb_state = not previous_state
+        if previous_state == "False" and updated_state is not None:
             bulb_state = True
-        elif state == "False":
-            bulb_state = False
 
         bulb = await Bulb.get(id=id)
-        await bulb.toggle_state(not bulb_state)
+        if bulb_state is not None:
+            await bulb.toggle_state(bulb_state)
+        else:
+            await bulb.assign_wiz_info()
 
         return await render(
             "views/bulbs/:id/bulb-state-toggle-form.html",
@@ -168,6 +224,9 @@ def create_view(app: Sanic) -> None:
         """
 
     app.add_route(BulbView.as_view(), "/bulbs/<id:strorempty>")
+    app.add_route(
+        control_bulb, "/bulbs/<id:int>/control", name="bulb_control", methods=["POST"]
+    )
     app.add_route(
         get_bulb_with_wiz_info,
         "bulbs/<id:int>/wiz-info",

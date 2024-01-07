@@ -58,4 +58,16 @@ def create_view(app: Sanic) -> None:
             if form.errors:
                 raise BadRequest(str(form.errors.items()))
 
+        @staticmethod
+        async def patch(request: Request, id: str):
+            form = RoomForm(get_formdata(request))
+            if form.validate():
+                await Room.filter(id=id).update(
+                    name=form.name.data,
+                    description=form.description.data,
+                )
+                return redirect(app.url_for("RoomsView"), status=303)
+            if form.errors:
+                raise BadRequest(str(form.errors.items()))
+
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
