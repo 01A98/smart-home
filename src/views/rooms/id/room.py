@@ -1,10 +1,10 @@
-from sanic import BadRequest, Request, Sanic
+from sanic import BadRequest, Request, Sanic, json
 from sanic.response import redirect
 from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from ... import Page, PageContext
+from ... import Page, BaseContext
 from ....forms.helpers import get_formdata
 from ....forms.room import RoomForm
 from ....models.room import Room
@@ -33,7 +33,7 @@ def create_view(app: Sanic) -> None:
 
         @app.ext.template(template_path)
         async def get(self, request: Request, id: str):
-            context = PageContext(current_page=self.page(id)).model_dump()
+            context = BaseContext(app=app, current_page=self.page(id)).model_dump()
             form = RoomForm()
             if id == "new":
                 context["new"] = True
@@ -90,10 +90,65 @@ def create_view(app: Sanic) -> None:
             context=dict(room=room),
         )
 
+    async def change_room_brightness(request: Request, id: int):
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.change_brightness(int(request.form.get("group_brightness")))
+
+        return await render(
+            "views/rooms/room-brightness-form.html",
+            context=dict(room=room),
+        )
+
+    async def room_bulbs_state(request: Request, id: int):
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.assign_room_state()
+
+        return await render(
+            "views/rooms/room-state-toggle-form.html",
+            context=dict(room=room),
+        )
+
+    async def room_bulbs_brightness(request: Request, id: int):
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.assign_room_brightness()
+
+        return await render(
+            "views/rooms/room-brightness-form.html",
+            context=dict(room=room),
+        )
+
+    async def room_bulbs_temp_name(request: Request, id: int):
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        temp_name = request.args.get("temp_name")
+        await room.set_room_temp_by_name(temp_name)
+
+        return json({"temp_name": temp_name})
+
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
+
     app.add_route(
         toggle_room_state,
         "rooms/<id:int>/toggle-state",
-        name="toggle_room_state",
         methods=["POST"],
+    )
+    app.add_route(
+        change_room_brightness,
+        "rooms/<id:int>/change-brightness",
+        methods=["POST"],
+    )
+    app.add_route(
+        room_bulbs_temp_name,
+        "rooms/<id:int>/bulbs-temp-name",
+        methods=["POST"],
+    )
+
+    app.add_route(
+        room_bulbs_state,
+        "rooms/<id:int>/bulbs-state",
+        methods=["GET"],
+    )
+    app.add_route(
+        room_bulbs_brightness,
+        "rooms/<id:int>/bulbs-brightness",
+        methods=["GET"],
     )

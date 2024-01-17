@@ -1,11 +1,10 @@
-import asyncio
-
 from sanic import Request, Sanic
 from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from .. import NAVIGATION, Page, PageContext
+from .. import NAVIGATION, Page, BaseContext
+from ...components.spinner import spinner
 from ...models.room import Room
 
 
@@ -20,12 +19,12 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.all().prefetch_related("bulbs")
-            await asyncio.gather(*[room.assign_room_state() for room in rooms])
             return await render(
                 self.page.template_path,
                 context={
                     "rooms": rooms,
-                    **PageContext(current_page=self.page).model_dump(),
+                    "spinner": str(spinner(htmx_indicator=True)),
+                    **BaseContext(app=app, current_page=self.page).model_dump(),
                 },
             )
 

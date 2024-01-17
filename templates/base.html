@@ -27,6 +27,7 @@
         htmx.config.globalViewTransitions = true;
     </script>
     <style>
+        /* HTMX */
         .htmx-indicator {
             opacity: 0;
             transition: opacity 300ms ease-in;
@@ -38,6 +39,11 @@
 
         .htmx-request.htmx-indicator {
             opacity: 1
+        }
+
+        /* AlpineJS */
+        [x-cloak] {
+            display: none !important;
         }
 
         /* Toggle input */
@@ -90,8 +96,7 @@
         hx-boost="true"
         class="w-full flex flex-col items-center"
 >
-{% from "./macros/navbar.html" import navbar %}
-{{ navbar(url_for("HomeView"), navigation, current_page) }}
+{{ app_navbar | safe }}
 {% block content %}
 {% endblock content %}
 </body>

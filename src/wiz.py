@@ -165,8 +165,24 @@ MESSAGES = {
     "ON": WizMessage(params=BulbParameters(state=True)),
     "OFF": WizMessage(params=BulbParameters(state=False)),
     "INFO": WizMessage(method="getPilot"),
-    "WARM": WizMessage(params=BulbParameters(state=True, temperature=2200)),
-    "COLD": WizMessage(params=BulbParameters(state=True, temperature=6500)),
+    "WARMEST": WizMessage(
+        params=BulbParameters(state=True, temperature=2200, brightness=20)
+    ),
+    "WARMER": WizMessage(
+        params=BulbParameters(state=True, temperature=2700, brightness=20)
+    ),
+    "WARM": WizMessage(
+        params=BulbParameters(state=True, temperature=3200, brightness=20)
+    ),
+    "COLDEST": WizMessage(
+        params=BulbParameters(state=True, temperature=6500, brightness=20)
+    ),
+    "COLDER": WizMessage(
+        params=BulbParameters(state=True, temperature=5700, brightness=20)
+    ),
+    "COLD": WizMessage(
+        params=BulbParameters(state=True, temperature=5000, brightness=20)
+    ),
 }
 
 ParsedBulbResponse = Tuple[

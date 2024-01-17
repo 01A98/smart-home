@@ -47,6 +47,7 @@ def create_app() -> Sanic:
                 "src.models.room",
                 "src.models.icon",
                 "src.models.setting",
+                "src.models.scene",
             ]
         },
         generate_schemas=True,

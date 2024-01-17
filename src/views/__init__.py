@@ -1,8 +1,10 @@
+from functools import cached_property
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from sanic import Sanic
 
+from src.components import navbar
 from src.settings import SETTINGS, Settings
 
 
@@ -17,10 +19,16 @@ class Page(BaseModel):
 NAVIGATION: dict[str, Page] = {}
 
 
-class PageContext(BaseModel):
+class BaseContext(BaseModel):
+    app: Sanic
     current_page: Optional[Page] = None
     navigation: dict[str, Page] = NAVIGATION
     settings: Settings = SETTINGS
+
+    @computed_field
+    @cached_property
+    def app_navbar(self) -> str:
+        return str(navbar(self.app, self.navigation, self.current_page))
 
     class Config:
         arbitrary_types_allowed = True

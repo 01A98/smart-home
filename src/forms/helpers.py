@@ -41,9 +41,9 @@ def get_formdata(request: Request):
 
 
 def get_choices(
-    records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
-    option_value_field: str = "name",
-    is_optional: bool = True,
+        records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
+        option_value_field: str = "name",
+        is_optional: bool = True,
 ) -> list[tuple[int, str]]:
     choices = []
     if is_optional:
@@ -78,4 +78,4 @@ def coerce_rgb_string_to_tuple(value: str) -> tuple[int, int, int]:
 def coerce_wiz_info_to_rgb_string(wiz_info) -> str:
     if not wiz_info:
         return "#ffffff"
-    return f"#{wiz_info["r"]:02x}{wiz_info["g"]:02x}{wiz_info["b"]:02x}"
+    return f"#{wiz_info['r']:02x}{wiz_info['g']:02x}{wiz_info['b']:02x}"

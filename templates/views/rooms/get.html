@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{% from "./macros/spinner.html" import spinner %}
 {% from "./macros/grid-container.html" import grid_container %}
 {% from "./macros/card.html" import card %}
 {% from "./macros/nothing-here.html" import nothing_here %}
@@ -33,17 +32,77 @@
                                             hx-get="{{ url_for('bulb_with_wiz_info', id=bulb["id"], with_name=True) }}"
                                             hx-trigger="load"
                                             hx-swap="innerHTML"
+                                            hx-indicator="app-spinner"
                                             hx-target="#bulb-info-{{ bulb["id"] }}"
                                     ></div>
-                                    {{ spinner(htmx_indicator=False) }}
+                                    {{ spinner | safe }}
                                 </div>
                             {% endfor %}
                         </div>
-                        <div class="flex flex-row justify-between my-4 px-4 items-center">
+                        <div class="flex flex-row justify-between my-8 px-4 items-center {{ "border-t" if room.bulbs else "" }} border-gray-500">
                             {% if room.bulbs %}
-                                <div class="flex flex-row gap-x-1">
-                                    <p class="">Grupa</p>
-                                    {% include './views/rooms/room-state-toggle-form.html' %}
+                                <div class="flex flex-col justify-center items-start gap-y-3 my-2">
+                                    <h3 class="font-bold text-lg">Steruj wszystkimi</h3>
+                                    <div class="flex flex-row gap-x-2 justify-center items-center mb-2">
+                                        <div class="flex flex-col justify-center items-center gap-y-3 p-4 rounded-lg hover:border-gray-400 border-gray-200 border">
+                                            <div class="flex flex-row justify-center gap-x-3">
+                                                <button class="bg-red-400 hover:bg-red-500 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-warmest"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="warmest") }}">
+                                                </button>
+                                                <button class="bg-orange-400 hover:bg-orange-500 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-warmer"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="warmer") }}">
+                                                </button>
+                                                <button class="bg-yellow-400 hover:bg-yellow-500 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-warm"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="warm") }}">
+                                                </button>
+                                            </div>
+                                            <div class="flex flex-row justify-center gap-x-3">
+                                                <button class="bg-white hover:bg-cyan-100 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-cold"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="cold") }}">
+                                                </button>
+                                                <button class="bg-cyan-200 hover:bg-cyan-300 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-colder"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="colder") }}">
+                                                </button>
+                                                <button class="bg-cyan-400 hover:bg-cyan-500 focus:ring-4 rounded-full p-5"
+                                                        type="button" id="room-{{ room["id"] }}-bulbs-coldest"
+                                                        hx-swap="none"
+                                                        hx-post="{{ url_for('room_bulbs_temp_name', id=room["id"], temp_name="coldest") }}">
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="room-{{ room["id"] }}-bulbs-state" class="ml-2">
+                                            <div
+                                                    hx-get="{{ url_for('room_bulbs_state', id=room["id"]) }}"
+                                                    hx-trigger="load"
+                                                    hx-swap="innerHTML"
+                                                    hx-indicator="app-spinner"
+                                                    hx-target="#room-{{ room["id"] }}-bulbs-state"
+                                            ></div>
+                                            {{ spinner | safe }}
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-row gap-x-1">
+                                        <div id="room-{{ room["id"] }}-bulbs-brightness">
+                                            <div
+                                                    hx-get="{{ url_for('room_bulbs_brightness', id=room["id"]) }}"
+                                                    hx-trigger="load"
+                                                    hx-swap="innerHTML"
+                                                    hx-indicator="app-spinner"
+                                                    hx-target="#room-{{ room["id"] }}-bulbs-brightness"
+                                            ></div>
+                                            {{ spinner | safe }}
+                                        </div>
+                                    </div>
                                 </div>
                             {% endif %}
                             <a

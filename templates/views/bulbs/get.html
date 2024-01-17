@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "./macros/breadcrumbs.html" import breadcrumbs %}
-{% from "./macros/spinner.html" import spinner %}
 {% from "./macros/grid-container.html" import grid_container %}
 {% from "./macros/card.html" import card %}
 {% from "./macros/nothing-here.html" import nothing_here %}
@@ -43,9 +42,10 @@
                                                 hx-get="{{ url_for('bulb_with_wiz_info', id=bulb["id"]) }}"
                                                 hx-trigger="load"
                                                 hx-swap="innerHTML"
+                                                hx-indicator="app-spinner"
                                                 hx-target="#bulb-info-{{ bulb["id"] }}"
                                         ></div>
-                                        {{ spinner(htmx_indicator=False) }}
+                                        {{ spinner | safe }}
                                     </div>
                                 {% endcall %}
                             {% endfor %}

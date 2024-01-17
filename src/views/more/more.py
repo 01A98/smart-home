@@ -2,7 +2,7 @@ from sanic import Request, Sanic
 from sanic.views import HTTPMethodView
 from sanic_ext import render
 
-from .. import NAVIGATION, Page, PageContext
+from .. import NAVIGATION, Page, BaseContext
 
 
 def create_view(app: Sanic) -> None:
@@ -16,7 +16,7 @@ def create_view(app: Sanic) -> None:
         async def get(self, request: Request):
             return await render(
                 self.page.template_path,
-                context=PageContext(current_page=self.page).model_dump(),
+                context=BaseContext(app=app, current_page=self.page).model_dump(),
             )
 
     app.add_route(MoreView.as_view(), "/more")
