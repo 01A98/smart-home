@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from dominate.svg import svg, path
 from dominate.tags import *
 from sanic import Sanic
 
-from views import Page
+if TYPE_CHECKING:
+    from ..views import Page
 
 
 # noinspection PyStatementEffect

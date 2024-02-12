@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, computed_field
 from sanic import Sanic
 
-from src.components import navbar
+from src.components.navbar import navbar
 from src.settings import SETTINGS, Settings
 
 

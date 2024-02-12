@@ -31,7 +31,6 @@ def create_view(app: Sanic) -> None:
                     template_path=cls.template_path,
                 )
 
-        @app.ext.template(template_path)
         async def get(self, request: Request, id: str):
             context = BaseContext(app=app, current_page=self.page(id)).model_dump()
             form = RoomForm()
@@ -45,7 +44,7 @@ def create_view(app: Sanic) -> None:
                 form.process()
                 context["room"] = room
 
-            return dict(form=form, **context)
+            return render(self.template_path, context=dict(form=form, **context))
 
         @staticmethod
         async def post(request: Request, id: str):
@@ -122,7 +121,12 @@ def create_view(app: Sanic) -> None:
         temp_name = request.args.get("temp_name")
         await room.set_room_temp_by_name(temp_name)
 
-        return json({"temp_name": temp_name})
+        return json(
+            {
+                "temp_name": temp_name,
+            },
+            headers={"HX-Trigger": f"reloadRoom{room.id}BulbsBrightness"},
+        )
 
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
 

@@ -26,7 +26,7 @@ class bulb_icon(html_tag):
                         "24.7-103.1 63.5-135.4z",
                     ),
                     xmlns="http://www.w3.org/2000/svg",
-                    class_name="w-6 h-6 fill-gray-400",
+                    class_name="w-8 h-6 fill-gray-400",
                     viewBox="0 0 384 512",
                 )
             else:
@@ -42,6 +42,6 @@ class bulb_icon(html_tag):
                         "16-16 16c-44.2 0-80 35.8-80 80z",
                     ),
                     xmlns="http://www.w3.org/2000/svg",
-                    class_name=f"w-6 h-6 fill-{"yellow-400" if self._is_on else 'gray-400'}",
+                    class_name=f"w-6 h-6 fill-{'yellow-400' if self._is_on else 'gray-400'}",
                     viewBox="0 0 384 512",
                 )

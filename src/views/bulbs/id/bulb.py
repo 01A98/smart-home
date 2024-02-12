@@ -7,7 +7,7 @@ from sanic_ext import render, serializer
 from tortoise.transactions import atomic
 
 from ... import Page, BaseContext
-from ....components import bulb_icon
+from ....components.bulb_icon import bulb_icon
 from ....forms.bulb import BulbDetailsForm, bulb_control_form_factory
 from ....forms.helpers import (
     get_choices,

@@ -9,6 +9,7 @@
            hx-post="{{ url_for('change_room_brightness', id=room.id) }}"
            hx-target="#room-{{ room.id }}-brightness-form"
            hx-swap="outerHTML"
+           hx-trigger="change, reloadRoom{{ room.id }}BulbsBrightness from:body"
            min="10"
            max="100"
     />
