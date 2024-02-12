@@ -25,7 +25,7 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         "models.Icon", null=True, on_delete=SET_NULL
     )
 
-    bulbs_state: Union[bool | None] = None
+    bulbs_state: Union[bool, None] = None
     bulbs_brightness: int = None
 
     def __str__(self):
@@ -78,8 +78,8 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         await self.assign_room_brightness()
 
     async def set_room_temp_by_name(
-        self,
-        temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
+            self,
+            temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
     ) -> None:
         await asyncio.gather(
             *[
