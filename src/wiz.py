@@ -101,9 +101,9 @@ class WizMessage(BaseModel):
 
 
 class WizGetResult(BaseModel):
-    mac: Optional[str] = Field(description="MAC address of the bulb")
-    rssi: Optional[int] = Field(description="Signal strength of the bulb")
-    src: Optional[str] = Field(description="Source of the message")
+    mac: Optional[str] = Field(default=None, description="MAC address of the bulb")
+    rssi: Optional[int] = Field(default=None, description="Signal strength of the bulb")
+    src: Optional[str] = Field(default=None, description="Source of the message")
     r: Optional[int] = Field(default=None, ge=0, le=255, description="Red track value")
     g: Optional[int] = Field(
         default=None, ge=0, le=255, description="Green track value"
