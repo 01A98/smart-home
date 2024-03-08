@@ -1,13 +1,14 @@
-from sanic import BadRequest, Request, Sanic, json
+from dominate.tags import form, input_, label, span, html_tag
+from sanic import BadRequest, Request, Sanic, json, html
 from sanic.response import redirect
 from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from ... import Page, BaseContext
-from ....forms.helpers import get_formdata
-from ....forms.room import RoomForm
-from ....models.room import Room
+from forms.helpers import get_formdata
+from forms.room import RoomForm
+from models.room import Room
+from views import Page, BaseContext
 
 
 def create_view(app: Sanic) -> None:
@@ -44,7 +45,7 @@ def create_view(app: Sanic) -> None:
                 form.process()
                 context["room"] = room
 
-            return render(self.template_path, context=dict(form=form, **context))
+            return await render(self.template_path, context=dict(form=form, **context))
 
         @staticmethod
         async def post(request: Request, id: str):
@@ -71,22 +72,20 @@ def create_view(app: Sanic) -> None:
                 raise BadRequest(str(form.errors.items()))
 
     async def toggle_room_state(request: Request, id: int):
-        # TODO: this is outdated now, make consistent with other forms
         previous_state = request.form.get("room_state_value")
         updated_state = request.form.get("room_state", default=None)
         bulb_state = None
 
-        if previous_state is not None and updated_state is None:
-            bulb_state = not previous_state
-        if previous_state == "False" and updated_state is not None:
+        if previous_state == "false" and updated_state == "on":
             bulb_state = True
+        if previous_state == "true" and updated_state is not None:
+            bulb_state = False
 
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.toggle_state(bulb_state)
 
-        return await render(
-            "views/rooms/room-state-toggle-form.html",
-            context=dict(room=room),
+        return html(
+            toggle_room_state_form(room, app).render()
         )
 
     async def change_room_brightness(request: Request, id: int):
@@ -101,10 +100,8 @@ def create_view(app: Sanic) -> None:
     async def room_bulbs_state(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.assign_room_state()
-
-        return await render(
-            "views/rooms/room-state-toggle-form.html",
-            context=dict(room=room),
+        return html(
+            toggle_room_state_form(room, app).render()
         )
 
     async def room_bulbs_brightness(request: Request, id: int):
@@ -156,3 +153,36 @@ def create_view(app: Sanic) -> None:
         "rooms/<id:int>/bulbs-brightness",
         methods=["GET"],
     )
+
+
+def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
+    form_id = f"room-{room.id}-state-form"
+
+    with form(
+            id=form_id,
+    ) as form_:
+        reference_input_value = "true" if room.bulbs_state else "false"
+
+        input_(type="hidden", name="room_state_value", value=reference_input_value)
+        label(
+            span(
+                "Włącz lub wyłącz wszystkie zarówki",
+                class_name="sr-only"
+            ),
+            html_for=f"room_state",
+            class_name="flex items-center"
+        )
+        input_(
+            name="room_state",
+            id="room_state",
+            type="checkbox",
+            toggle=True,
+            **{"checked": room.bulbs_state} if room.bulbs_state else {},
+            **{
+                "hx-post": app.url_for("toggle_room_state", id=room.id),
+                "hx-target": f"#{form_id}",
+                "hx-swap": "outerHTML",
+            },
+        )
+
+    return form_

@@ -3,8 +3,8 @@ import re
 import wtforms
 from sanic import Sanic
 
-from .helpers import get_input_classes, get_styled_label, coerce_wiz_info_to_rgb_string
-from ..models.bulb import Bulb
+from forms.helpers import get_input_classes, get_styled_label, coerce_wiz_info_to_rgb_string
+from models.bulb import Bulb
 
 
 class BulbDetailsForm(wtforms.Form):
@@ -76,10 +76,10 @@ def bulb_control_form_factory(bulb: Bulb, app: Sanic):
                     else {}
                 ),
                 "class": "p-2 h-10 w-14 block bg-white border "
-                "scale-[1.25] "
-                "border-gray-200 cursor-pointer w-10 rounded-lg "
-                "disabled:opacity-50 disabled:pointer-events-none "
-                "dark:bg-slate-900 dark:border-gray-700",
+                         "scale-[1.25] "
+                         "border-gray-200 cursor-pointer w-10 rounded-lg "
+                         "disabled:opacity-50 disabled:pointer-events-none "
+                         "dark:bg-slate-900 dark:border-gray-700",
             },
         )
         brightness = wtforms.IntegerRangeField(

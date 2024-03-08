@@ -4,10 +4,14 @@
     <label for="room_state">
         <span class="sr-only">Włącz lub wyłącz wszystkie zarówki</span>
     </label>
-    <input name="room_state" id="room_state" type="checkbox"
-           toggle {{ "checked" if room.bulbs_state }}
-           hx-post="{{ url_for('toggle_room_state', id=room.id) }}"
-           hx-target="#room-{{ room.id }}-state-form"
-           hx-swap="outerHTML"
-           class="origin-left scale-[1.2]"/>
+    <input
+            name="room_state"
+            id="room_state"
+            type="checkbox"
+            toggle
+            {{ "checked" if room.bulbs_state }}
+            hx-post="{{ url_for('toggle_room_state', id=room.id) }}"
+            hx-target="#room-{{ room.id }}-state-form"
+            hx-swap="outerHTML"
+    />
 </form>

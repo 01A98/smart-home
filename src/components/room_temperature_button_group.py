@@ -6,7 +6,7 @@ from sanic import Sanic
 from ..models.room import Room
 
 
-class room_temperature_button_group(html_tag):
+class RoomTemperatureButtonGroup(html_tag):
     room: Room
     app: Sanic
     tagname = "app-room-temperature-button-group"
@@ -18,11 +18,11 @@ class room_temperature_button_group(html_tag):
 
         with self:
             with div(
-                id=f"room-{self.room.id}-temperature-button-group",
-                class_name=(
-                    "flex flex-col justify-center items-center gap-y-3 p-4 rounded-lg "
-                    "hover:border-gray-400 border-gray-200 border"
-                ),
+                    id=f"room-{self.room.id}-temperature-button-group",
+                    class_name=(
+                            "flex flex-col justify-center items-center gap-y-3 p-4 rounded-lg "
+                            "hover:border-gray-400 border-gray-200 border"
+                    ),
             ):
                 with div(class_name="flex flex-row justify-center gap-x-3"):
                     self.temp_control_button("warmest", "bg-red-400 hover:bg-red-500")
@@ -38,9 +38,9 @@ class room_temperature_button_group(html_tag):
                     self.temp_control_button("coldest", "bg-cyan-400 hover:bg-cyan-500")
 
     def temp_control_button(
-        self,
-        temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
-        color_classes: str,
+            self,
+            temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
+            color_classes: str,
     ) -> button:
         return button(
             type="button",
