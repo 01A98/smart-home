@@ -5,10 +5,10 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from forms.helpers import get_formdata
-from forms.room import RoomForm
-from models.room import Room
-from views import Page, BaseContext
+from src.forms.helpers import get_formdata
+from src.forms.room import RoomForm
+from src.models.room import Room
+from src.views import Page, BaseContext
 
 
 def create_view(app: Sanic) -> None:
@@ -84,9 +84,7 @@ def create_view(app: Sanic) -> None:
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.toggle_state(bulb_state)
 
-        return html(
-            toggle_room_state_form(room, app).render()
-        )
+        return html(toggle_room_state_form(room, app).render())
 
     async def change_room_brightness(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
@@ -100,9 +98,7 @@ def create_view(app: Sanic) -> None:
     async def room_bulbs_state(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.assign_room_state()
-        return html(
-            toggle_room_state_form(room, app).render()
-        )
+        return html(toggle_room_state_form(room, app).render())
 
     async def room_bulbs_brightness(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
@@ -159,18 +155,15 @@ def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
     form_id = f"room-{room.id}-state-form"
 
     with form(
-            id=form_id,
+        id=form_id,
     ) as form_:
         reference_input_value = "true" if room.bulbs_state else "false"
 
         input_(type="hidden", name="room_state_value", value=reference_input_value)
         label(
-            span(
-                "Włącz lub wyłącz wszystkie zarówki",
-                class_name="sr-only"
-            ),
+            span("Włącz lub wyłącz wszystkie zarówki", class_name="sr-only"),
             html_for=f"room_state",
-            class_name="flex items-center"
+            class_name="flex items-center",
         )
         input_(
             name="room_state",

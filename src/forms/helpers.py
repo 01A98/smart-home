@@ -4,10 +4,10 @@ from markupsafe import Markup
 from multidict import MultiDict
 from sanic import Request
 
-from models.bulb import Bulb
-from models.icon import Icon
-from models.room import Room
-from models.setting import Setting
+from src.models.bulb import Bulb
+from src.models.icon import Icon
+from src.models.room import Room
+from src.models.setting import Setting
 
 
 def get_input_classes():
@@ -41,9 +41,9 @@ def get_formdata(request: Request):
 
 
 def get_choices(
-        records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
-        option_value_field: str = "name",
-        is_optional: bool = True,
+    records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
+    option_value_field: str = "name",
+    is_optional: bool = True,
 ) -> list[tuple[int, str]]:
     choices = []
     if is_optional:

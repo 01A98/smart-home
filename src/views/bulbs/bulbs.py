@@ -5,9 +5,9 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from components.spinner import Spinner
-from models.bulb import Bulb
-from views import NAVIGATION, Page, BaseContext
+from src.components.spinner import Spinner
+from src.models.bulb import Bulb
+from src.views import NAVIGATION, Page, BaseContext
 
 
 def create_view(app: Sanic) -> None:

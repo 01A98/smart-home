@@ -6,13 +6,18 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render, serializer
 from tortoise.transactions import atomic
 
-from components.bulb_icon import BulbIcon
-from forms.bulb import BulbDetailsForm, bulb_control_form_factory
-from forms.helpers import get_choices, get_formdata, coerce_literal_bool_to_bool, coerce_rgb_string_to_tuple
-from models.bulb import Bulb
-from models.room import Room
-from views import Page, BaseContext
-from wiz import BulbParameters, WizMessage
+from src.components.bulb_icon import BulbIcon
+from src.forms.bulb import BulbDetailsForm, bulb_control_form_factory
+from src.forms.helpers import (
+    get_choices,
+    get_formdata,
+    coerce_literal_bool_to_bool,
+    coerce_rgb_string_to_tuple,
+)
+from src.models.bulb import Bulb
+from src.models.room import Room
+from src.views import Page, BaseContext
+from src.wiz import BulbParameters, WizMessage
 
 
 def create_view(app: Sanic) -> None:
@@ -123,8 +128,8 @@ def create_view(app: Sanic) -> None:
                     control_form.previous_state.data
                 )
                 if (
-                        previous_state == control_form.updated_state.data
-                        and control_form.updated_state.data is False
+                    previous_state == control_form.updated_state.data
+                    and control_form.updated_state.data is False
                 ):
                     return text("No changes", headers={"HX-Reswap": "none"}, status=204)
 

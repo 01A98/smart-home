@@ -5,14 +5,14 @@ from sanic.response import redirect
 from sanic.worker.loader import AppLoader
 from tortoise.contrib.sanic import register_tortoise
 
-import logger  # noqa
-from settings import SETTINGS
-from views.bulbs.bulbs import create_view as create_bulbs_view
-from views.bulbs.id.bulb import create_view as create_bulbs_id_view
-from views.home.home import create_view as create_home_view
-from views.more.more import create_view as create_more_view
-from views.rooms.id.room import create_view as create_rooms_id_view
-from views.rooms.rooms import create_view as create_rooms_view
+import src.logger  # noqa
+from src.settings import SETTINGS
+from src.views.bulbs.bulbs import create_view as create_bulbs_view
+from src.views.bulbs.id.bulb import create_view as create_bulbs_id_view
+from src.views.home.home import create_view as create_home_view
+from src.views.more.more import create_view as create_more_view
+from src.views.rooms.id.room import create_view as create_rooms_id_view
+from src.views.rooms.rooms import create_view as create_rooms_view
 
 
 def attach_endpoints(app: Sanic):
@@ -53,11 +53,11 @@ def create_app() -> Sanic:
         db_url=str(SETTINGS.db_url),
         modules={
             "models": [
-                "models.bulb",
-                "models.room",
-                "models.icon",
-                "models.setting",
-                "models.scene",
+                "src.models.bulb",
+                "src.models.room",
+                "src.models.icon",
+                "src.models.setting",
+                "src.models.scene",
             ]
         },
         generate_schemas=True,

@@ -11,7 +11,7 @@ from src.settings import SETTINGS, Settings
 
 class Page(BaseModel):
     name: str
-    title: Optional[str] = ""`
+    title: Optional[str] = ""
     template_path: Optional[str] = ""
     js_file: Optional[str] = None
 
