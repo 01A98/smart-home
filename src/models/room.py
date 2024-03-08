@@ -12,9 +12,9 @@ from tortoise.fields import (
 )
 from tortoise.models import Model
 
-from .helpers import GetItemMixin, TimestampMixin, PydanticMixin
-from .icon import Icon
-from ..wiz import send_message_to_wiz, MESSAGES, WizMessage, BulbParameters
+from models.helpers import GetItemMixin, TimestampMixin, PydanticMixin
+from models.icon import Icon
+from wiz import send_message_to_wiz, MESSAGES, WizMessage, BulbParameters
 
 
 class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):

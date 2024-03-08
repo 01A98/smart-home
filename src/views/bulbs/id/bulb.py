@@ -6,18 +6,13 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render, serializer
 from tortoise.transactions import atomic
 
-from ... import Page, BaseContext
-from ....components.bulb_icon import bulb_icon
-from ....forms.bulb import BulbDetailsForm, bulb_control_form_factory
-from ....forms.helpers import (
-    get_choices,
-    get_formdata,
-    coerce_literal_bool_to_bool,
-    coerce_rgb_string_to_tuple,
-)
-from ....models.bulb import Bulb
-from ....models.room import Room
-from ....wiz import BulbParameters, WizMessage
+from components.bulb_icon import BulbIcon
+from forms.bulb import BulbDetailsForm, bulb_control_form_factory
+from forms.helpers import get_choices, get_formdata, coerce_literal_bool_to_bool, coerce_rgb_string_to_tuple
+from models.bulb import Bulb
+from models.room import Room
+from views import Page, BaseContext
+from wiz import BulbParameters, WizMessage
 
 
 def create_view(app: Sanic) -> None:
@@ -112,7 +107,7 @@ def create_view(app: Sanic) -> None:
         await bulb.assign_wiz_info()
 
         context = dict(bulb=bulb)
-        context["bulb_icon"] = bulb_icon(bulb=bulb)
+        context["bulb_icon"] = BulbIcon(bulb=bulb)
         context["with_name"] = request.args.get("with_name", False)
 
         return await render("views/bulbs/:id/bulb-info.html", context=context)
@@ -128,8 +123,8 @@ def create_view(app: Sanic) -> None:
                     control_form.previous_state.data
                 )
                 if (
-                    previous_state == control_form.updated_state.data
-                    and control_form.updated_state.data is False
+                        previous_state == control_form.updated_state.data
+                        and control_form.updated_state.data is False
                 ):
                     return text("No changes", headers={"HX-Reswap": "none"}, status=204)
 
@@ -225,7 +220,7 @@ def create_view(app: Sanic) -> None:
     async def get_bulb_icon(request: Request, id: int):
         bulb = await Bulb.get(id=id)
         await bulb.assign_wiz_info()
-        return str(bulb_icon(bulb=bulb))
+        return str(BulbIcon(bulb=bulb))
 
     app.add_route(BulbView.as_view(), "/bulbs/<id:strorempty>")
     app.add_route(

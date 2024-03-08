@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, TYPE_CHECKING
 
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator, PydanticListModel
 from tortoise.exceptions import ValidationError
 from tortoise.fields import DatetimeField
 
@@ -31,8 +31,8 @@ class GetItemMixin:
 
 class PydanticMixin:
     @classmethod
-    async def get_all(cls: type[Model]) -> list[PydanticModel]:
-        Model_Py = pydantic_model_creator(cls, name=cls.__name__)
+    async def get_all(cls: type[Model]) -> PydanticListModel:
+        Model_Py = pydantic_queryset_creator(cls, name=cls.__name__)
         return await Model_Py.from_queryset(cls.all())
 
     @classmethod

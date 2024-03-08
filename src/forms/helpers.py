@@ -4,10 +4,10 @@ from markupsafe import Markup
 from multidict import MultiDict
 from sanic import Request
 
-from ..models.bulb import Bulb
-from ..models.icon import Icon
-from ..models.room import Room
-from ..models.setting import Setting
+from models.bulb import Bulb
+from models.icon import Icon
+from models.room import Room
+from models.setting import Setting
 
 
 def get_input_classes():

@@ -3,10 +3,10 @@ from tortoise.fields import SET_NULL, CharField, ForeignKeyField, ForeignKeyRela
 from tortoise.models import Model
 from tortoise.validators import validate_ipv4_address
 
-from .helpers import GetItemMixin, TimestampMixin
-from .icon import Icon
-from .room import Room
-from ..wiz import send_message_to_wiz, MESSAGES, WizMessage
+from models.helpers import GetItemMixin, TimestampMixin
+from models.icon import Icon
+from models.room import Room
+from wiz import send_message_to_wiz, MESSAGES, WizMessage
 
 
 class Bulb(Model, TimestampMixin, GetItemMixin):

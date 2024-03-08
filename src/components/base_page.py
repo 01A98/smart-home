@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 from dominate import document
 from dominate.tags import meta, link, style, script
+from dominate.util import raw
 
 if TYPE_CHECKING:
     from dominate.tags import html_tag
 
 
-class base_page(document):
+class BasePage(document):
     def __init__(self, *args: html_tag, title: str = "Smart Home") -> None:
         super().__init__(title=title)
 
@@ -21,20 +22,38 @@ class base_page(document):
                 href="/assets/bolt.svg",
                 type="image/svg",
             )
-            self.add_stylesheets()
             self.add_scripts()
+            self.add_stylesheets()
+
+        self.body["hx-boost"] = "true"
+        self.body["hx-ext"] = "head-support"
 
         self.add(*args)
 
     @staticmethod
     def add_stylesheets() -> None:
-        # Flowbite css
+        # Material Tailwind
         link(
-            href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.css",
+            href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css",
             rel="stylesheet",
         )
-        with style():
-            """
+
+        # Material Icons
+        link(
+            href="https://fonts.googleapis.com/icon?family=Material+Icons+Round",
+            rel="stylesheet",
+        )
+
+        # Web Font
+        link(
+            href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap",
+            rel="stylesheet",
+        )
+
+        # HTMX
+        style(
+            raw(
+                """
                 /* HTMX */
                 .htmx-indicator {
                     opacity: 0;
@@ -91,15 +110,48 @@ class base_page(document):
                     transform: translateX(1rem);
                 }
             """
+            )
+        )
 
     @staticmethod
     def add_scripts() -> None:
+        # Material Tailwind
         script(src="https://cdn.tailwindcss.com")
         script(
-            src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js",
-            defer="",
+            raw("""
+                tailwind.config = { 
+                  theme: {
+                    fontFamily: { 
+                      sans: ['Montserrat'],
+                      serif: ['Montserrat'],
+                      mono: ['Montserrat'],
+                      display: ['Montserrat'],
+                      body: ['Montserrat']
+                    }
+                  }
+                }
+                """),
+            type="text/javascript",
         )
-        script(src="//unpkg.com/alpinejs", defer="")
+        script(
+            src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js",
+            defer=True,
+            **{
+                "hx-head": "re-eval"
+            }
+        )
+        script(
+            src="https://unpkg.com/@material-tailwind/html@latest/scripts/collapse.js",
+            defer=True,
+            **{
+                "hx-head": "re-eval"
+            }
+        )
+
+        # AlpineJS
+        # script(src="//unpkg.com/alpinejs", defer=True)
+
+        # HTMX
         script(src="https://unpkg.com/htmx.org@1.9.10")
         script(src="https://unpkg.com/htmx.org/dist/ext/head-support.js")
         script("htmx.config.globalViewTransitions = true;", type="text/javascript")

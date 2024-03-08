@@ -9,14 +9,27 @@
     />
     <title>{{ current_page.title if current_page.title else 'Smart Home' }}</title>
     <link rel="icon" href="/assets/bolt.svg" type="image/svg">
+    {#    <link#}
+    {#            href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.css"#}
+    {#            rel="stylesheet"#}
+    {#    />#}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!--Material Tailwind-->
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/script-name.js"></script>
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js"></script>
     <link
-            href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.css"
+            rel="stylesheet"
+            href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css"
+    />
+    <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
             rel="stylesheet"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!--Flowbite-->
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/datepicker.min.js"></script>
+
+
+    {#    <!--Flowbite-->#}
+    {#    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.1.1/flowbite.min.js"></script>#}
+    {#    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/datepicker.min.js"></script>#}
 
     <!--AlpineJS-->
     <script src="//unpkg.com/alpinejs" defer></script>

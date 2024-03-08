@@ -1,10 +1,11 @@
 from functools import cached_property
 from typing import Optional
 
+from dominate.tags import html_tag
 from pydantic import BaseModel, computed_field
 from sanic import Sanic
 
-from src.components.navbar import navbar
+from src.components.navbar import Navbar
 from src.settings import SETTINGS, Settings
 
 
@@ -27,24 +28,8 @@ class BaseContext(BaseModel):
 
     @computed_field
     @cached_property
-    def app_navbar(self) -> str:
-        return str(navbar(self.app, self.navigation, self.current_page))
+    def app_navbar(self) -> html_tag:
+        return Navbar(self.app, self.navigation, self.current_page)
 
     class Config:
         arbitrary_types_allowed = True
-
-
-def create_views(app: Sanic) -> None:
-    from .home.home import create_view as create_home_view
-    from .bulbs.bulbs import create_view as create_bulbs_view
-    from .bulbs.id.bulb import create_view as create_bulbs_id_view
-    from .rooms.rooms import create_view as create_rooms_view
-    from .rooms.id.room import create_view as create_rooms_id_view
-    from .more.more import create_view as create_more_view
-
-    create_home_view(app)
-    create_bulbs_view(app)
-    create_bulbs_id_view(app)
-    create_rooms_view(app)
-    create_rooms_id_view(app)
-    create_more_view(app)

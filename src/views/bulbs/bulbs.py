@@ -5,9 +5,9 @@ from sanic.views import HTTPMethodView
 from sanic_ext import render
 from tortoise.transactions import atomic
 
-from .. import NAVIGATION, Page, BaseContext
-from ...components.spinner import spinner
-from ...models.bulb import Bulb
+from components.spinner import Spinner
+from models.bulb import Bulb
+from views import NAVIGATION, Page, BaseContext
 
 
 def create_view(app: Sanic) -> None:
@@ -35,7 +35,7 @@ def create_view(app: Sanic) -> None:
                 self.page.template_path,
                 context={
                     "bulbs_by_room_name": bulbs_by_room_name,
-                    "spinner": str(spinner(htmx_indicator=True)),
+                    "spinner": str(Spinner(htmx_indicator=True)),
                     **BaseContext(app=app, current_page=self.page).model_dump(),
                 },
             )

@@ -12,7 +12,8 @@ def create_view(app: Sanic) -> None:
             template_path="views/home/get.html",
         )
 
-        async def get(self, request: Request):
+        @staticmethod
+        async def get(request: Request):
             return redirect(app.url_for("RoomsView"), status=303)
 
     app.add_route(HomeView.as_view(), "/")
