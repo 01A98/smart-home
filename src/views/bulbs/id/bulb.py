@@ -1,4 +1,5 @@
 import random
+from dataclasses import dataclass
 
 from sanic import BadRequest, Request, Sanic, html, json, text
 from sanic.response import redirect
@@ -18,6 +19,11 @@ from src.models.bulb import Bulb
 from src.models.room import Room
 from src.views import Page, BaseContext
 from src.wiz import BulbParameters, WizMessage
+
+
+@dataclass
+class Routes:
+    BULB_WITH_WIZ_INFO: str = "bulb_with_wiz_info"
 
 
 def create_view(app: Sanic) -> None:
@@ -106,17 +112,6 @@ def create_view(app: Sanic) -> None:
             await Bulb.filter(id=id_).delete()
             return redirect(app.url_for("BulbsView"), status=303)
 
-    async def get_bulb_with_wiz_info(request: Request, id: int):
-        bulb = await Bulb.get(id=id)
-
-        await bulb.assign_wiz_info()
-
-        context = dict(bulb=bulb)
-        context["bulb_icon"] = BulbIcon(bulb=bulb)
-        context["with_name"] = request.args.get("with_name", False)
-
-        return await render("views/bulbs/:id/bulb-info.html", context=context)
-
     async def control_bulb(request: Request, id: int):
         bulb = await Bulb.get(id=id)
         BulbControlForm = bulb_control_form_factory(bulb, app)
@@ -128,8 +123,8 @@ def create_view(app: Sanic) -> None:
                     control_form.previous_state.data
                 )
                 if (
-                    previous_state == control_form.updated_state.data
-                    and control_form.updated_state.data is False
+                        previous_state == control_form.updated_state.data
+                        and control_form.updated_state.data is False
                 ):
                     return text("No changes", headers={"HX-Reswap": "none"}, status=204)
 
@@ -233,11 +228,6 @@ def create_view(app: Sanic) -> None:
         "/bulbs/<id:int>/control",
         name="bulb_control",
         methods=["POST", "GET"],
-    )
-    app.add_route(
-        get_bulb_with_wiz_info,
-        "bulbs/<id:int>/wiz-info",
-        name="bulb_with_wiz_info",
     )
     app.add_route(
         toggle_bulb_state,

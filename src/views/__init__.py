@@ -19,6 +19,9 @@ class Page(BaseModel):
 # Used for navbar, entries will be added in individual views
 NAVIGATION: dict[str, Page] = {}
 
+# Entries will be added in individual views
+ROUTES: dict[str, str] = {}
+
 
 class BaseContext(BaseModel):
     app: Sanic

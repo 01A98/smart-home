@@ -1,5 +1,5 @@
 from tortoise.contrib.pydantic.creator import pydantic_model_creator
-from tortoise.fields import SET_NULL, CharField, ForeignKeyField, ForeignKeyRelation
+from tortoise.fields import SET_NULL, CharField, ForeignKeyField, ForeignKeyNullableRelation
 from tortoise.models import Model
 from tortoise.validators import validate_ipv4_address
 
@@ -12,10 +12,10 @@ from src.wiz import send_message_to_wiz, MESSAGES, WizMessage
 class Bulb(Model, TimestampMixin, GetItemMixin):
     ip = CharField(validators=[validate_ipv4_address], max_length=15, unique=True)
     name = CharField(max_length=128)
-    room: [ForeignKeyRelation[Room], None] = ForeignKeyField(
+    room: ForeignKeyNullableRelation[Room] = ForeignKeyField(
         "models.Room", null=True, on_delete=SET_NULL
     )
-    icon: [ForeignKeyRelation[Icon], None] = ForeignKeyField(
+    icon: ForeignKeyNullableRelation[Icon] = ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL
     )
 

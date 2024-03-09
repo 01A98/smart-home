@@ -7,8 +7,7 @@ from tortoise.fields import (
     BooleanField,
     CharField,
     ForeignKeyField,
-    ForeignKeyRelation,
-    TextField,
+    TextField, ForeignKeyNullableRelation,
 )
 from tortoise.models import Model
 
@@ -21,7 +20,7 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
     name = CharField(max_length=128, unique=True)
     description = TextField(null=True)
     is_favorite = BooleanField(default=False)
-    icon: Union[ForeignKeyRelation[Icon], None] = ForeignKeyField(
+    icon: ForeignKeyNullableRelation[Icon] = ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL
     )
 
@@ -78,8 +77,8 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         await self.assign_room_brightness()
 
     async def set_room_temp_by_name(
-        self,
-        temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
+            self,
+            temp_name: Literal["warmest", "warmer", "warm", "cold", "colder", "coldest"],
     ) -> None:
         await asyncio.gather(
             *[

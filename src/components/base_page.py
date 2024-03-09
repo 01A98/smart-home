@@ -43,6 +43,10 @@ class BasePage(document):
             href="https://fonts.googleapis.com/icon?family=Material+Icons+Round",
             rel="stylesheet",
         )
+        link(
+            href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded",
+            rel="stylesheet",
+        )
 
         # Web Font
         link(
