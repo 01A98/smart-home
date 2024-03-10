@@ -19,9 +19,9 @@ from src.views import NAVIGATION, Page, BaseContext, ROUTES
 
 @dataclass
 class Routes:
-    BULB_WITH_WIZ_INFO: str = 'bulb_with_wiz_info'
-    TURN_BULB_ON: str = 'turn_bulb_on'
-    TURN_BULB_OFF: str = 'turn_bulb_off'
+    BULB_WITH_WIZ_INFO: str = "bulb_with_wiz_info"
+    TURN_BULB_ON: str = "turn_bulb_on"
+    TURN_BULB_OFF: str = "turn_bulb_off"
 
 
 def create_view(app: Sanic) -> None:
@@ -34,7 +34,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.filter(
-                name="Gabinet",
+                # name="Gabinet",
             ).prefetch_related("bulbs")
 
             base_ctx = BaseContext(app=app, current_page=self.page)
@@ -89,22 +89,14 @@ def create_view(app: Sanic) -> None:
         "bulbs/<id:int>/wiz-info",
         name=Routes.BULB_WITH_WIZ_INFO,
     )
-    app.add_route(
-        turn_bulb_on,
-        "bulbs/<id:int>/on",
-        name=Routes.TURN_BULB_ON
-    )
-    app.add_route(
-        turn_bulb_off,
-        "bulbs/<id:int>/off",
-        name=Routes.TURN_BULB_OFF
-    )
+    app.add_route(turn_bulb_on, "bulbs/<id:int>/on", name=Routes.TURN_BULB_ON)
+    app.add_route(turn_bulb_off, "bulbs/<id:int>/off", name=Routes.TURN_BULB_OFF)
 
 
 def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
     with div(
-            class_name="grid grid-flow-row p-4 gap-8 sm:grid-cols-2 md:grid-cols-3 "
-                       "lg:grid-cols-4 xl:grid-cols-5"
+        class_name="grid grid-flow-row p-4 gap-8 sm:grid-cols-2 md:grid-cols-3 "
+        "lg:grid-cols-4 xl:grid-cols-5"
     ) as div_:
         if len(rooms) == 0:
             NothingHere()
@@ -116,8 +108,8 @@ def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
 
 def room_card(room: Room, app: Sanic) -> html_tag:
     with div(
-            id=f"card-item-{room.id}",
-            class_name="flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-lg",
+        id=f"card-item-{room.id}",
+        class_name="flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-lg",
     ) as div_:
         # Name and description
         with div(class_name="p-4 self-start"):
@@ -128,20 +120,24 @@ def room_card(room: Room, app: Sanic) -> html_tag:
         with div(class_name="flex flex-col gap-1 px-2 h-min"):
             for bulb in room.bulbs:
                 with div(id=f"bulb-info-{bulb.id}"):
-                    div(**{
-                        "hx-get": app.url_for(Routes.BULB_WITH_WIZ_INFO, id=bulb.id, with_name=True),
-                        "hx-trigger": "load",
-                        "hx-swap": "innerHTML",
-                        "hx-indicator": "app-spinner",
-                        "hx-target": f"#bulb-info-{bulb.id}"
-                    })
+                    div(
+                        **{
+                            "hx-get": app.url_for(
+                                Routes.BULB_WITH_WIZ_INFO, id=bulb.id, with_name=True
+                            ),
+                            "hx-trigger": "load",
+                            "hx-swap": "innerHTML",
+                            "hx-indicator": "app-spinner",
+                            "hx-target": f"#bulb-info-{bulb.id}",
+                        }
+                    )
 
                     Spinner(htmx_indicator=True)
 
         # Group controls
         with div(
-                class_name=f"flex flex-row justify-between my-8 px-4 items-center "
-                           f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
+            class_name=f"flex flex-row justify-between my-8 px-4 items-center "
+            f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
         ):
             if room.bulbs:
                 bulbs_state_container_id = f"room-{room.id}-bulbs-state"
@@ -163,7 +159,7 @@ def room_card(room: Room, app: Sanic) -> html_tag:
 
                     with div(class_name="flex flex-row gap-x-1"):
                         with div(
-                                id=f"room-{room.id}-bulbs-brightness", class_name="ml-2"
+                            id=f"room-{room.id}-bulbs-brightness", class_name="ml-2"
                         ):
                             div(
                                 **{
