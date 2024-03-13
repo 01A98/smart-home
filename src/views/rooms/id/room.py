@@ -2,9 +2,11 @@ from dominate.tags import form, input_, label, span, html_tag
 from sanic import BadRequest, Request, Sanic, json, html
 from sanic.response import redirect
 from sanic.views import HTTPMethodView
-from sanic_ext import render
+from sanic_ext import render, serializer
 from tortoise.transactions import atomic
 
+from src.components.room_brightness_slider import RoomBrightnessSlider
+from src.components.room_light_switch import RoomLightSwitch
 from src.forms.helpers import get_formdata
 from src.forms.room import RoomForm
 from src.models.room import Room
@@ -71,6 +73,7 @@ def create_view(app: Sanic) -> None:
             if form.errors:
                 raise BadRequest(str(form.errors.items()))
 
+    @serializer(html)
     async def toggle_room_state(request: Request, id: int):
         previous_state = request.form.get("room_state_value")
         updated_state = request.form.get("room_state", default=None)
@@ -84,30 +87,25 @@ def create_view(app: Sanic) -> None:
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.toggle_state(bulb_state)
 
-        return html(toggle_room_state_form(room, app).render())
+        return RoomLightSwitch(app, room).render()
 
-    async def change_room_brightness(request: Request, id: int):
-        room = await Room.get(id=id).prefetch_related("bulbs")
-        await room.change_brightness(int(request.form.get("group_brightness")))
-
-        return await render(
-            "views/rooms/room-brightness-form.html",
-            context=dict(room=room),
-        )
-
+    @serializer(html)
     async def room_bulbs_state(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.assign_room_state()
-        return html(toggle_room_state_form(room, app).render())
+        return RoomLightSwitch(app, room).render()
 
+    @serializer(html)
+    async def change_room_brightness(request: Request, id: int):
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.change_brightness(int(request.form.get("group_brightness")))
+        return RoomBrightnessSlider(app, room).render()
+
+    @serializer(html)
     async def room_bulbs_brightness(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.assign_room_brightness()
-
-        return await render(
-            "views/rooms/room-brightness-form.html",
-            context=dict(room=room),
-        )
+        return RoomBrightnessSlider(app, room).render()
 
     async def room_bulbs_temp_name(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
@@ -138,16 +136,17 @@ def create_view(app: Sanic) -> None:
         "rooms/<id:int>/bulbs-temp-name",
         methods=["POST"],
     )
-
     app.add_route(
         room_bulbs_state,
         "rooms/<id:int>/bulbs-state",
         methods=["GET"],
+        name=RoomLightSwitch.route,
     )
     app.add_route(
         room_bulbs_brightness,
         "rooms/<id:int>/bulbs-brightness",
         methods=["GET"],
+        name=RoomBrightnessSlider.route,
     )
 
 
@@ -155,7 +154,7 @@ def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
     form_id = f"room-{room.id}-state-form"
 
     with form(
-        id=form_id,
+            id=form_id,
     ) as form_:
         reference_input_value = "true" if room.bulbs_state else "false"
 

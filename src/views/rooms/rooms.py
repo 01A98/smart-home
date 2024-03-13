@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
-from dominate.tags import div, section, p, h3, html_tag, small
-from sanic import Request, Sanic, html
+from dominate.tags import div, section, p, html_tag, small, h3
+from sanic import Request, Sanic
+from sanic.response import html
 from sanic.views import HTTPMethodView
 from sanic_ext import serializer
 from tortoise.transactions import atomic
@@ -11,7 +12,8 @@ from src.components.breadcrumbs import Breadcrumbs
 from src.components.bulb_icon import BulbIcon
 from src.components.new_item_button import NewItemButton
 from src.components.nothing_here import NothingHere
-from src.components.spinner import Spinner
+from src.components.room_brightness_slider import RoomBrightnessSlider
+from src.components.room_light_switch import RoomLightSwitch
 from src.models.bulb import Bulb
 from src.models.room import Room
 from src.views import NAVIGATION, Page, BaseContext, ROUTES
@@ -19,14 +21,13 @@ from src.views import NAVIGATION, Page, BaseContext, ROUTES
 
 @dataclass
 class Routes:
-    BULB_WITH_WIZ_INFO: str = 'bulb_with_wiz_info'
     TURN_BULB_ON: str = 'turn_bulb_on'
     TURN_BULB_OFF: str = 'turn_bulb_off'
 
 
 def create_view(app: Sanic) -> None:
     class RoomsView(HTTPMethodView):
-        decorators = [atomic()]
+        decorators = [atomic(), serializer(html)]
         page = Page(
             name="RoomsView",
             title="Pokoje",
@@ -34,7 +35,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.filter(
-                name="Gabinet",
+                # name="Gabinet",
             ).prefetch_related("bulbs")
 
             base_ctx = BaseContext(app=app, current_page=self.page)
@@ -57,14 +58,7 @@ def create_view(app: Sanic) -> None:
                 title=self.page.title,
             )
 
-            return html(page_content.render())
-
-    app.add_route(RoomsView.as_view(), "/rooms")
-
-    NAVIGATION["rooms"] = RoomsView.page
-    ROUTES[Routes.BULB_WITH_WIZ_INFO] = Routes.BULB_WITH_WIZ_INFO
-    ROUTES[Routes.TURN_BULB_ON] = Routes.TURN_BULB_ON
-    ROUTES[Routes.TURN_BULB_OFF] = Routes.TURN_BULB_OFF
+            return page_content.render()
 
     @serializer(html)
     async def get_bulb_with_wiz_info(request: Request, id: int):
@@ -84,10 +78,11 @@ def create_view(app: Sanic) -> None:
         await bulb.toggle_state(False)
         return BulbIcon(app, bulb).render()
 
+    app.add_route(RoomsView.as_view(), "/rooms")
     app.add_route(
         get_bulb_with_wiz_info,
         "bulbs/<id:int>/wiz-info",
-        name=Routes.BULB_WITH_WIZ_INFO,
+        name=BulbIcon.route,
     )
     app.add_route(
         turn_bulb_on,
@@ -100,10 +95,15 @@ def create_view(app: Sanic) -> None:
         name=Routes.TURN_BULB_OFF
     )
 
+    NAVIGATION["rooms"] = RoomsView.page
+    ROUTES[BulbIcon.route] = BulbIcon.route
+    ROUTES[Routes.TURN_BULB_ON] = Routes.TURN_BULB_ON
+    ROUTES[Routes.TURN_BULB_OFF] = Routes.TURN_BULB_OFF
+
 
 def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
     with div(
-            class_name="grid grid-flow-row p-4 gap-8 sm:grid-cols-2 md:grid-cols-3 "
+            class_name="grid grid-flow-row gap-8 sm:grid-cols-2 md:grid-cols-3 "
                        "lg:grid-cols-4 xl:grid-cols-5"
     ) as div_:
         if len(rooms) == 0:
@@ -127,16 +127,7 @@ def room_card(room: Room, app: Sanic) -> html_tag:
         # Bulbs
         with div(class_name="flex flex-col gap-1 px-2 h-min"):
             for bulb in room.bulbs:
-                with div(id=f"bulb-info-{bulb.id}"):
-                    div(**{
-                        "hx-get": app.url_for(Routes.BULB_WITH_WIZ_INFO, id=bulb.id, with_name=True),
-                        "hx-trigger": "load",
-                        "hx-swap": "innerHTML",
-                        "hx-indicator": "app-spinner",
-                        "hx-target": f"#bulb-info-{bulb.id}"
-                    })
-
-                    Spinner(htmx_indicator=True)
+                BulbIcon.lazy_load(app, bulb)
 
         # Group controls
         with div(
@@ -144,39 +135,10 @@ def room_card(room: Room, app: Sanic) -> html_tag:
                            f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
         ):
             if room.bulbs:
-                bulbs_state_container_id = f"room-{room.id}-bulbs-state"
-
                 with div(class_name="flex flex-col justify-center items-start gap-y-3"):
                     h3("Steruj wszystkimi", class_name="font-bold")
-
-                    with div(id=bulbs_state_container_id, class_name="ml-2"):
-                        div(
-                            **{
-                                "hx-get": app.url_for("room_bulbs_state", id=room.id),
-                                "hx-trigger": "load",
-                                "hx-swap": "innerHTML",
-                                "hx-indicator": "app-spinner",
-                                "hx-target": f"#{bulbs_state_container_id}",
-                            }
-                        )
-                        Spinner(htmx_indicator=True)
-
-                    with div(class_name="flex flex-row gap-x-1"):
-                        with div(
-                                id=f"room-{room.id}-bulbs-brightness", class_name="ml-2"
-                        ):
-                            div(
-                                **{
-                                    "hx-get": app.url_for(
-                                        "room_bulbs_brightness", id=room.id
-                                    ),
-                                    "hx-trigger": "load",
-                                    "hx-swap": "innerHTML",
-                                    "hx-indicator": "app-spinner",
-                                    "hx-target": f"#room-{room.id}-bulbs-brightness",
-                                }
-                            )
-                            Spinner(htmx_indicator=True)
+                    RoomLightSwitch.lazy_load(app, room)
+                    RoomBrightnessSlider.lazy_load(app, room)
             # Edit room link
             # with a(
             #         href=app.url_for("RoomView", id=room.id),

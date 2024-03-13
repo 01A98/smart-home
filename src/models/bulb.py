@@ -19,14 +19,14 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
         "models.Icon", null=True, on_delete=SET_NULL
     )
 
-    wiz_info = None
+    wiz_info = {}
 
     def __str__(self) -> str:
         return self.name
 
     async def assign_wiz_info(self) -> None:
         error, result = await send_message_to_wiz(self.ip)
-        self.wiz_info = None if error else result.model_dump()
+        self.wiz_info = {} if error else result.model_dump()
 
     async def toggle_state(self, state: bool) -> None:
         error, res = await send_message_to_wiz(

@@ -1,10 +1,11 @@
 from typing import Optional
 
-from dominate.tags import button, p
+from dominate.tags import button, p, div
 from dominate.util import raw
 from sanic import Sanic
 
 from src.components.material_icons import Icon
+from src.components.spinner import Spinner
 from src.models.bulb import Bulb
 from src.views import ROUTES
 
@@ -12,6 +13,7 @@ from src.views import ROUTES
 class BulbIcon(button):
     tagname = "button"
     id = "app-bulb-icon"
+    route = 'bulb_with_wiz_info'
 
     def __init__(self, app: Sanic, bulb: Bulb = None, state: Optional[bool] = None) -> None:
         super().__init__()
@@ -27,7 +29,7 @@ class BulbIcon(button):
         self["hx-swap"] = "outerHTML"
 
         with self:
-            if state or bulb.wiz_info["state"]:
+            if state or (bulb and bulb.wiz_info.get("state")):
                 Icon(
                     "lightbulb",
                     class_name="material-symbols-rounded"
@@ -44,3 +46,13 @@ class BulbIcon(button):
             raw("""
                 <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js"></script>
             """)
+
+    @classmethod
+    def lazy_load(cls, app: Sanic, bulb: Bulb) -> div:
+        return div(
+            Spinner(htmx_indicator=True),
+            **{
+                "hx-get": app.url_for(cls.route, id=bulb.id, with_name=True),
+                "hx-trigger": "load",
+                "hx-swap": "innerHTML",
+            })
