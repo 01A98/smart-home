@@ -25,7 +25,7 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
         return self.name
 
     async def assign_wiz_info(self) -> None:
-        error, result = await send_message_to_wiz(self.ip)
+        error, result = await send_message_to_wiz(self.ip, MESSAGES["INFO"])
         self.wiz_info = {} if error else result.model_dump()
 
     async def toggle_state(self, state: bool) -> None:

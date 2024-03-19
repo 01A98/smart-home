@@ -21,8 +21,8 @@ from src.views import NAVIGATION, Page, BaseContext, ROUTES
 
 @dataclass
 class Routes:
-    TURN_BULB_ON: str = 'turn_bulb_on'
-    TURN_BULB_OFF: str = 'turn_bulb_off'
+    TURN_BULB_ON: str = "turn_bulb_on"
+    TURN_BULB_OFF: str = "turn_bulb_off"
 
 
 def create_view(app: Sanic) -> None:
@@ -35,7 +35,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.filter(
-                # name="Gabinet",
+                name="Gabinet",
             ).prefetch_related("bulbs")
 
             base_ctx = BaseContext(app=app, current_page=self.page)
@@ -84,16 +84,8 @@ def create_view(app: Sanic) -> None:
         "bulbs/<id:int>/wiz-info",
         name=BulbIcon.route,
     )
-    app.add_route(
-        turn_bulb_on,
-        "bulbs/<id:int>/on",
-        name=Routes.TURN_BULB_ON
-    )
-    app.add_route(
-        turn_bulb_off,
-        "bulbs/<id:int>/off",
-        name=Routes.TURN_BULB_OFF
-    )
+    app.add_route(turn_bulb_on, "bulbs/<id:int>/on", name=Routes.TURN_BULB_ON)
+    app.add_route(turn_bulb_off, "bulbs/<id:int>/off", name=Routes.TURN_BULB_OFF)
 
     NAVIGATION["rooms"] = RoomsView.page
     ROUTES[BulbIcon.route] = BulbIcon.route
@@ -103,8 +95,8 @@ def create_view(app: Sanic) -> None:
 
 def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
     with div(
-            class_name="grid grid-flow-row gap-8 sm:grid-cols-2 md:grid-cols-3 "
-                       "lg:grid-cols-4 xl:grid-cols-5"
+        class_name="grid grid-flow-row gap-8 sm:grid-cols-2 md:grid-cols-3 "
+        "lg:grid-cols-4 xl:grid-cols-5"
     ) as div_:
         if len(rooms) == 0:
             NothingHere()
@@ -116,8 +108,8 @@ def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
 
 def room_card(room: Room, app: Sanic) -> html_tag:
     with div(
-            id=f"card-item-{room.id}",
-            class_name="flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-lg",
+        id=f"card-item-{room.id}",
+        class_name="flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-lg",
     ) as div_:
         # Name and description
         with div(class_name="p-4 self-start"):
@@ -131,8 +123,8 @@ def room_card(room: Room, app: Sanic) -> html_tag:
 
         # Group controls
         with div(
-                class_name=f"flex flex-row justify-between my-8 px-4 items-center "
-                           f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
+            class_name=f"flex flex-row justify-between my-8 px-4 items-center "
+            f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
         ):
             if room.bulbs:
                 with div(class_name="flex flex-col justify-center items-start gap-y-3"):

@@ -1,48 +1,38 @@
 import asyncio
 import json
-import logging
-from typing import ByteString, Callable, Literal, Optional, Tuple, Union
+from typing import ByteString, Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
-from tenacity import (
-    retry_if_exception_type,
-    stop_after_delay,
-    wait_fixed,
-    RetryError,
-    AsyncRetrying,
-)
-
-_LOGGER = logging.getLogger(__name__)
 
 UDP_PORT = 38899
-TIMEOUT = 2
+BULB_RESPONSE_TIMEOUT = 2
 
 
-class WizProtocol(asyncio.DatagramProtocol):
+class FutureResponseDatagramProtocol(asyncio.DatagramProtocol):
     def __init__(
-            self,
-            on_response: Optional[Callable[[bytes, Tuple[str, int]], None]] = None,
-            on_error: Optional[Callable[[Optional[Exception]], None]] = None,
+        self,
+        response_future: asyncio.Future,
     ) -> None:
         """Init the protocol."""
-        self.on_response = on_response
-        self.on_error = on_error
+        self.response_future = response_future
 
     def datagram_received(self, data: bytes, addr: Tuple[str, int]) -> None:
         """Trigger on_response."""
-        _LOGGER.info("Received data: %s", data)
-        if self.on_response is not None:
-            self.on_response(data, addr)
+        self.response_future.set_result(data)
 
     def error_received(self, exc: Optional[Exception]) -> None:
         """Handle error."""
-        _LOGGER.debug("WizProtocol error: %s", exc)
-        if self.on_error is not None:
-            self.on_error(exc)
+        self.response_future.set_exception(
+            exc if exc else Exception(f"FutureResponseDatagramProtocol error: {exc}")
+        )
 
     def connection_lost(self, exc: Optional[Exception]) -> None:
         """The connection is lost."""
-        _LOGGER.debug("WizProtocol connection lost: %s", exc)
+        self.response_future.set_exception(
+            exc
+            if exc
+            else Exception(f"FutureResponseDatagramProtocol connection lost: {exc}")
+        )
 
 
 class BulbParameters(BaseModel):
@@ -191,8 +181,8 @@ ParsedBulbResponse = Tuple[
 
 
 def parse_bulb_response(
-        response_message: ByteString,
-        wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
+    response_message: ByteString,
+    wiz_message_method: Literal["setPilot", "getPilot"] = "setPilot",
 ):
     response_data = json.loads(response_message)
     error = response_data.get("error")
@@ -208,49 +198,30 @@ def parse_bulb_response(
     return parsed_error, parsed_result
 
 
-async def get_transport(
-        event_loop: asyncio.AbstractEventLoop,
-        response_future: asyncio.Future,
-        ip: str = "192.168.1.255",
-        port: int = UDP_PORT,
-):
-    transport, _protocol = await event_loop.create_datagram_endpoint(
-        lambda: WizProtocol(
-            on_response=lambda data, addr: response_future.set_result((data, addr)),
-            on_error=lambda exc: response_future.set_exception(
-                exc if exc else Exception("Unknown error")
-            ),
-        ),
-        remote_addr=(ip, port),
-    )
-    return transport
-
-
 async def send_message_to_wiz(
-        ip: str, message: WizMessage = MESSAGES["INFO"]
+    ip: str, message: WizMessage
 ) -> Union[
     tuple[Union[None, WizSetResult, WizGetResult]], tuple[Union[str, WizError], None]
 ]:
-    no_response_error_message = "Bulb offline"
-    message_bytes = message.model_dump_json(
-        exclude_none=True,
-    ).encode("utf-8")
-
-    response_future = asyncio.Future()
-    transport = await get_transport(asyncio.get_event_loop(), response_future, ip)
-
     try:
-        transport.sendto(message_bytes, (ip, UDP_PORT))
-        async for attempt in AsyncRetrying(
-                retry=retry_if_exception_type(asyncio.exceptions.InvalidStateError),
-                wait=wait_fixed(0.05),  # 50ms
-                stop=stop_after_delay(TIMEOUT),
-        ):
-            with attempt:
-                response_message, _addr = response_future.result()
-                parsed_response = parse_bulb_response(
-                    response_message, wiz_message_method=message.method
-                )
-                return parsed_response
-    except RetryError:
+        remote_addr = (ip, UDP_PORT)
+        no_response_error_message = "Bulb offline"
+        message_bytes = message.model_dump_json(
+            exclude_none=True,
+        ).encode("utf-8")
+
+        response_future = asyncio.Future()
+        event_loop = asyncio.get_event_loop()
+        transport, _ = await event_loop.create_datagram_endpoint(
+            lambda: FutureResponseDatagramProtocol(response_future),
+            remote_addr=remote_addr,
+        )
+
+        transport.sendto(message_bytes, remote_addr)
+        response_message = await asyncio.wait_for(
+            response_future, BULB_RESPONSE_TIMEOUT
+        )
+        return parse_bulb_response(response_message, wiz_message_method=message.method)
+
+    except TimeoutError:
         return no_response_error_message, None
