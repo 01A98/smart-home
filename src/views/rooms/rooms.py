@@ -35,7 +35,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.filter(
-                name="Gabinet",
+                # name="Gabinet",
             ).prefetch_related("bulbs")
 
             base_ctx = BaseContext(app=app, current_page=self.page)
