@@ -23,7 +23,7 @@ from src.wiz import BulbParameters, WizMessage
 
 @dataclass
 class Routes:
-    BULB_WITH_WIZ_INFO: str = "bulb_with_wiz_info"
+    bulb_with_state: str = "bulb_with_state"
 
 
 def create_view(app: Sanic) -> None:
@@ -123,8 +123,8 @@ def create_view(app: Sanic) -> None:
                     control_form.previous_state.data
                 )
                 if (
-                        previous_state == control_form.updated_state.data
-                        and control_form.updated_state.data is False
+                    previous_state == control_form.updated_state.data
+                    and control_form.updated_state.data is False
                 ):
                     return text("No changes", headers={"HX-Reswap": "none"}, status=204)
 

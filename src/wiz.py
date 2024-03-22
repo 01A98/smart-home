@@ -60,7 +60,7 @@ class BulbParameters(BaseModel):
         description="Warm white track value",
     )
     dimming: Optional[int] = Field(
-        default=None, alias="brightness", ge=10, le=100, description="Brightness value"
+        default=None, alias="brightness", ge=0, le=100, description="Brightness value"
     )
     sceneId: Optional[int] = Field(
         default=None, ge=1, le=32, description="Predefined light mode ID"
@@ -129,13 +129,16 @@ class WizGetResult(BaseModel):
     schdPsetId: Optional[int] = Field(default=None, description="Rhythm ID of the room")
 
 
-class WizSetResult(BaseModel):
-    success: bool = Field(..., description="Success status of the setPilot method")
-
-
 class WizError(BaseModel):
     code: Optional[int] = Field(None, description="Error code")
     message: Optional[str] = Field(None, description="Error message")
+
+
+class WizSetResult(BaseModel):
+    success: Optional[bool] = Field(
+        None, description="Success status of the setPilot method"
+    )
+    error: Optional[WizError] = Field(None, description="Error message")
 
 
 class WizResponse(BaseModel):
@@ -188,9 +191,10 @@ def parse_bulb_response(
     error = response_data.get("error")
     result = response_data.get("result")
 
+    # TODO: implement error messages
     parsed_error = WizError(**error) if error else None
     parsed_result = (
-        WizSetResult(**result)
+        WizSetResult(**result if result else {"error": error})
         if wiz_message_method == "setPilot"
         else WizGetResult(**result)
     )

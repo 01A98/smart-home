@@ -10,9 +10,13 @@ class RoomBrightnessSlider(button):
     tagname = "form"
     id = "app-brightness-slider"
     route = "room_bulbs_brightness"
+    app: Sanic
+    room: Room
 
     def __init__(self, app: Sanic, room: Room = None) -> None:
         super().__init__()
+        self.app = app
+        self.room = room
 
         with self:
             if room.bulbs_brightness is None:
@@ -22,29 +26,33 @@ class RoomBrightnessSlider(button):
                     span("Ustaw jasność", class_name="sr-only"),
                     html_for="group_brightness",
                 )
-                # input_ tag doesn't work with value attribute correctly
-                raw(
-                    f"""
-                    <input name="group_brightness" id="group_brightness" type="range"
-                           value="{room.bulbs_brightness}"
-                           class="accent-blue-500 origin-left scale-[1.8] w-4/5"
-                           hx-post="{app.url_for("change_room_brightness", id=room.id)}"
-                           hx-target="#room-{room.id}-brightness-form"
-                           hx-swap="outerHTML"
-                           hx-trigger="change, reloadRoom{room.id}BulbsBrightness from:body"
-                           min="10"
-                           max="100"
-                    />
-                    """
-                )
+                self._brightness_slider_input()
 
     @classmethod
     def lazy_load(cls, app: Sanic, room: Room) -> div:
         return div(
             Spinner(htmx_indicator=True),
+            class_name="w-full",
             **{
                 "hx-get": app.url_for(cls.route, id=room.id),
-                "hx-trigger": "load",
-                "hx-swap": "outerHTML",
+                "hx-trigger": f"load, change-bulb-state from:#room-{room.id}, change-room-state from:#room-{room.id}",
+                "hx-swap": "innerHTML",
             },
+        )
+
+    def _brightness_slider_input(self) -> raw:
+        return raw(
+            f"""
+                <input 
+                    name="group_brightness" 
+                    id="group_brightness" 
+                    type="range"
+                    value="{self.room.bulbs_brightness}"
+                    class="accent-blue-500 origin-left scale-[2.0] w-1/2"
+                    hx-post="{self.app.url_for("change_room_brightness", id=self.room.id)}"
+                    min="0"
+                    max="100"
+                    step="10"
+                />
+            """
         )

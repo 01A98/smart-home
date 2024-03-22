@@ -13,7 +13,7 @@ from src.views import ROUTES
 class BulbIcon(button):
     tagname = "button"
     id = "app-bulb-icon"
-    route = "bulb_with_wiz_info"
+    route = "bulb_with_state"
 
     def __init__(
         self, app: Sanic, bulb: Bulb = None, state: Optional[bool] = None
@@ -21,9 +21,9 @@ class BulbIcon(button):
         super().__init__()
 
         self["class"] = (
-            "align-middle select-none font-sans font-bold text-center uppercase "
+            "w-full align-middle select-none font-sans font-bold text-center uppercase "
             "transition-all disabled:opacity-50 disabled:shadow-none "
-            "disabled:pointer-events-none text-xs py-3 px-6 rounded-lg bg-gray-900 "
+            "disabled:pointer-events-none text-sm py-3 px-2 rounded-lg bg-gray-900 "
             "text-white shadow-md shadow-gray-900/10 hover:shadow-lg hover:shadow-gray-900/20 "
             "focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none"
         )
@@ -54,9 +54,10 @@ class BulbIcon(button):
     def lazy_load(cls, app: Sanic, bulb: Bulb) -> div:
         return div(
             Spinner(htmx_indicator=True),
+            class_name="w-full",
             **{
-                "hx-get": app.url_for(cls.route, id=bulb.id, with_name=True),
-                "hx-trigger": "load",
+                "hx-get": app.url_for(cls.route, id=bulb.id),
+                "hx-trigger": "load, change-room-state from:closest [event_container]",
                 "hx-swap": "innerHTML",
             },
         )

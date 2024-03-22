@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import Callable, Coroutine, Any
 
 from dominate.tags import div, section, p, html_tag, small, h3
-from sanic import Request, Sanic
+from sanic import Request, Sanic, HTTPResponse
 from sanic.response import html
 from sanic.views import HTTPMethodView
 from sanic_ext import serializer
@@ -53,7 +54,7 @@ def create_view(app: Sanic) -> None:
                         class_name="block mx-auto w-full max-w-screen-xl py-6 px-2",
                     ),
                     room_card_grid(rooms, app),
-                    class_name="w-full h-full max-w-screen-xl py-6 px-2 mx-auto",
+                    class_name="w-full h-full max-w-screen-xl py-6 px-4 mx-auto mx-4",
                 ),
                 title=self.page.title,
             )
@@ -61,31 +62,42 @@ def create_view(app: Sanic) -> None:
             return page_content.render()
 
     @serializer(html)
-    async def get_bulb_with_wiz_info(request: Request, id: int):
+    async def get_bulb_with_state(request: Request, id: int):
         bulb = await Bulb.get(id=id)
         await bulb.assign_wiz_info()
         return BulbIcon(app, bulb).render()
 
-    @serializer(html)
-    async def turn_bulb_on(request: Request, id: int):
-        bulb = await Bulb.get(id=id)
-        await bulb.toggle_state(True)
-        return BulbIcon(app, bulb).render()
+    def change_bulb_state_handler(
+        state: bool,
+    ) -> Callable[[Request, int], Coroutine[Any, Any, HTTPResponse]]:
+        hx_trigger = "change-bulb-state"
 
-    @serializer(html)
-    async def turn_bulb_off(request: Request, id: int):
-        bulb = await Bulb.get(id=id)
-        await bulb.toggle_state(False)
-        return BulbIcon(app, bulb).render()
+        async def handler(request: Request, id: int):
+            bulb = await Bulb.get(id=id)
+            await bulb.toggle_state(state)
+            content = BulbIcon(app, bulb)
+
+            res = html(content.render())
+            res.headers.add("HX-Trigger", hx_trigger)
+
+            return res
+
+        return handler
 
     app.add_route(RoomsView.as_view(), "/rooms")
     app.add_route(
-        get_bulb_with_wiz_info,
-        "bulbs/<id:int>/wiz-info",
+        get_bulb_with_state,
+        "bulbs/<id:int>/state",
         name=BulbIcon.route,
     )
-    app.add_route(turn_bulb_on, "bulbs/<id:int>/on", name=Routes.TURN_BULB_ON)
-    app.add_route(turn_bulb_off, "bulbs/<id:int>/off", name=Routes.TURN_BULB_OFF)
+    app.add_route(
+        change_bulb_state_handler(True), "bulbs/<id:int>/on", name=Routes.TURN_BULB_ON
+    )
+    app.add_route(
+        change_bulb_state_handler(False),
+        "bulbs/<id:int>/off",
+        name=Routes.TURN_BULB_OFF,
+    )
 
     NAVIGATION["rooms"] = RoomsView.page
     ROUTES[BulbIcon.route] = BulbIcon.route
@@ -96,7 +108,7 @@ def create_view(app: Sanic) -> None:
 def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
     with div(
         class_name="grid grid-flow-row gap-8 sm:grid-cols-2 md:grid-cols-3 "
-        "lg:grid-cols-4 xl:grid-cols-5"
+        "lg:grid-cols-4"
     ) as div_:
         if len(rooms) == 0:
             NothingHere()
@@ -108,8 +120,9 @@ def room_card_grid(rooms: list[Room], app: Sanic) -> html_tag:
 
 def room_card(room: Room, app: Sanic) -> html_tag:
     with div(
-        id=f"card-item-{room.id}",
-        class_name="flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-lg",
+        id=f"room-{room.id}",
+        event_container=True,
+        class_name="w-full flex flex-col rounded-xl bg-white border-2 border-gray-100 text-gray-700 shadow-lg",
     ) as div_:
         # Name and description
         with div(class_name="p-4 self-start"):
@@ -117,18 +130,20 @@ def room_card(room: Room, app: Sanic) -> html_tag:
             if room.description:
                 small(room.description, class_name="leading-5 text-gray-500 mt-2")
         # Bulbs
-        with div(class_name="flex flex-col gap-1 px-2 h-min"):
+        with div(class_name="flex flex-col items-end gap-1 px-6 h-min"):
             for bulb in room.bulbs:
                 BulbIcon.lazy_load(app, bulb)
 
         # Group controls
         with div(
-            class_name=f"flex flex-row justify-between my-8 px-4 items-center "
-            f"{'border-t pt-4' if room.bulbs else ''} border-gray-500"
+            class_name=f"w-full flex flex-col my-8 px-8 {'border-t pt-4' if room.bulbs else ''} border-gray-500"
         ):
             if room.bulbs:
-                with div(class_name="flex flex-col justify-center items-start gap-y-3"):
+                with div(class_name="flex flex-col justify-center items-start mb-2"):
                     h3("Steruj wszystkimi", class_name="font-bold")
+                with div(
+                    class_name="w-full flex flex-col justify-center items-end gap-y-4"
+                ):
                     RoomLightSwitch.lazy_load(app, room)
                     RoomBrightnessSlider.lazy_load(app, room)
             # Edit room link

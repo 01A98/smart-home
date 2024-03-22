@@ -32,6 +32,7 @@ class RoomLightSwitch(button):
                     id="room_state",
                     type="checkbox",
                     toggle=True,
+                    # class_name="origin-left scale-[1.5] h-full",
                     **{"checked": room.bulbs_state} if room.bulbs_state is True else {},
                     **{
                         "hx-post": app.url_for("toggle_room_state", id=room.id),
@@ -45,7 +46,7 @@ class RoomLightSwitch(button):
             Spinner(htmx_indicator=True),
             **{
                 "hx-get": app.url_for(cls.route, id=room.id),
-                "hx-trigger": "load",
-                "hx-swap": "outerHTML",
+                "hx-trigger": f"load, change-bulb-state from:#room-{room.id}, change-room-state from:#room-{room.id}",
+                "hx-swap": "innerHTML",
             },
         )

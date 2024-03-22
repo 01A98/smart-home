@@ -73,7 +73,6 @@ def create_view(app: Sanic) -> None:
             if form.errors:
                 raise BadRequest(str(form.errors.items()))
 
-    @serializer(html)
     async def toggle_room_state(request: Request, id: int):
         previous_state = request.form.get("room_state_value")
         updated_state = request.form.get("room_state", default=None)
@@ -87,7 +86,11 @@ def create_view(app: Sanic) -> None:
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.toggle_state(bulb_state)
 
-        return RoomLightSwitch(app, room).render()
+        hx_trigger = "change-room-state"
+        res = html(RoomLightSwitch(app, room).render())
+        res.headers.add("HX-Trigger", hx_trigger)
+
+        return res
 
     @serializer(html)
     async def room_bulbs_state(request: Request, id: int):
@@ -95,11 +98,15 @@ def create_view(app: Sanic) -> None:
         await room.assign_room_state()
         return RoomLightSwitch(app, room).render()
 
-    @serializer(html)
     async def change_room_brightness(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.change_brightness(int(request.form.get("group_brightness")))
-        return RoomBrightnessSlider(app, room).render()
+
+        hx_trigger = "change-room-state"
+        res = html(RoomBrightnessSlider(app, room).render())
+        res.headers.add("HX-Trigger", hx_trigger)
+
+        return res
 
     @serializer(html)
     async def room_bulbs_brightness(request: Request, id: int):
@@ -154,14 +161,14 @@ def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
     form_id = f"room-{room.id}-state-form"
 
     with form(
-            id=form_id,
+        id=form_id,
     ) as form_:
         reference_input_value = "true" if room.bulbs_state else "false"
 
         input_(type="hidden", name="room_state_value", value=reference_input_value)
         label(
             span("Włącz lub wyłącz wszystkie zarówki", class_name="sr-only"),
-            html_for=f"room_state",
+            html_for="room_state",
             class_name="flex items-center",
         )
         input_(
