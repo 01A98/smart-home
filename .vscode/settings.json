@@ -31,9 +31,19 @@
             "database": "${workspaceFolder:smart-home}/db.sql"
         }
     ],
-    "autoimport.filesToScan": "**/*.{ts,py,js}",
+    "autoimport.filesToScan": "**/*.{py}",
     "html.format.indentHandlebars": true,
     "html.format.templating": true,
     "html.format.wrapLineLength": 90,
-    "html.format.wrapAttributes": "force-expand-multiline"
+    "html.format.wrapAttributes": "force-expand-multiline",
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestPath": "venv/bin/pytest",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "pythonTestExplorer.testFramework": "pytest",
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "python.languageServer": "Pylance",
+    
 }
