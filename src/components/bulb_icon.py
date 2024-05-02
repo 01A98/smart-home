@@ -7,7 +7,6 @@ from sanic import Sanic
 from src.components.material_icons import Icon
 from src.components.spinner import Spinner
 from src.models.bulb import Bulb
-from src.views import ROUTES
 
 
 class BulbIcon(button):
@@ -16,7 +15,7 @@ class BulbIcon(button):
     route = "bulb_with_state"
 
     def __init__(
-        self, app: Sanic, bulb: Bulb = None, state: Optional[bool] = None
+            self, app: Sanic, bulb: Bulb = None, state: Optional[bool] = None
     ) -> None:
         super().__init__()
 
@@ -35,13 +34,13 @@ class BulbIcon(button):
         with self:
             if state or (bulb and bulb.wiz_info.get("state")):
                 Icon("lightbulb", class_name="material-symbols-rounded")
-                self["hx-get"] = app.url_for(ROUTES["turn_bulb_off"], id=bulb.id)
+                # self["hx-get"] = app.url_for(ROUTES["turn_bulb_off"], id=bulb.id)
             elif not bulb.wiz_info:
                 Icon("power_off", class_name="material-symbols-rounded")
                 self["disabled"] = "true"
             else:
                 Icon("light_off", class_name="material-symbols-rounded")
-                self["hx-get"] = app.url_for(ROUTES["turn_bulb_on"], id=bulb.id)
+                # self["hx-get"] = app.url_for(ROUTES["turn_bulb_on"], id=bulb.id)
             p(bulb.name)
             # TODO: trigger script rerun instead with htmx if possible
             raw(

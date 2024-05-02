@@ -49,10 +49,10 @@ class RoomBrightnessSlider(button):
                     type="range"
                     value="{self.room.bulbs_brightness}"
                     class="accent-blue-500 origin-left scale-[2.0] w-1/2"
-                    hx-post="{self.app.url_for("change_room_brightness", id=self.room.id)}"
                     min="0"
                     max="100"
                     step="10"
                 />
             """
+            #     hx-post="{self.app.url_for("change_room_brightness", id=self.room.id)}"
         )

@@ -6,7 +6,7 @@ from src.models.room import Room
 
 
 class RoomLightSwitch(button):
-    tagname = "form"
+    tagname = "div"
     id = "app-light-switch"
     route = "room_bulbs_state"
 
@@ -34,9 +34,12 @@ class RoomLightSwitch(button):
                     toggle=True,
                     # class_name="origin-left scale-[1.5] h-full",
                     **{"checked": room.bulbs_state} if room.bulbs_state is True else {},
+                    # **{"onSubmit": 'this.form.submit()'},
                     **{
-                        "hx-post": app.url_for("toggle_room_state", id=room.id),
-                        "hx-swap": "outerHTML",
+                        # TODO: register route
+                        "hx-trigger": "change",
+                        "hx-post": app.url_for("room-control", id=room.id),
+                        # "hx-swap": "outerHTML",
                     },
                 )
 

@@ -155,13 +155,20 @@ def create_view(app: Sanic) -> None:
         methods=["GET"],
         name=RoomBrightnessSlider.route,
     )
+    #     TODO: refactor
+    app.add_route(
+        lambda req, id: id,
+        "room-control/<id:int>",
+        name="room-control",
+        methods=["POST"]
+    )
 
 
 def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
     form_id = f"room-{room.id}-state-form"
 
     with form(
-        id=form_id,
+            id=form_id,
     ) as form_:
         reference_input_value = "true" if room.bulbs_state else "false"
 

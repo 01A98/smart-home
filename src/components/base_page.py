@@ -153,7 +153,7 @@ class BasePage(document):
         )
 
         # AlpineJS
-        # script(src="//unpkg.com/alpinejs", defer=True)
+        script(src="//unpkg.com/alpinejs", defer=True)
 
         # HTMX
         script(src="https://unpkg.com/htmx.org@1.9.10")
