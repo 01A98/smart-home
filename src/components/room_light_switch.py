@@ -37,8 +37,8 @@ class RoomLightSwitch(button):
                     # **{"onSubmit": 'this.form.submit()'},
                     **{
                         # TODO: register route
-                        "hx-trigger": "change",
-                        "hx-post": app.url_for("room-control", id=room.id),
+                        # "hx-trigger": "change",
+                        "hx-post": app.url_for("room-state", id=room.id),
                         # "hx-swap": "outerHTML",
                     },
                 )

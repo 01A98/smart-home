@@ -42,14 +42,13 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
             )
 
     async def assign_room_brightness(self) -> None:
-        # TODO: should probably be average of all bulbs
-        bulb = self.bulbs[0]
-        await bulb.assign_wiz_info()
-        await asyncio.gather(*[bulb.assign_wiz_info() for bulb in self.bulbs])
+        async with asyncio.TaskGroup() as group:
+            tasks = [group.create_task(bulb.assign_wiz_info()) for bulb in self.bulbs]
 
         if not any(bulb.wiz_info for bulb in self.bulbs):
             self.bulbs_brightness = None
-        if bulb.wiz_info:
+        else:
+            # TODO: handle when some are offline
             avg = sum(
                 int(bulb.wiz_info["dimming"] if bulb.wiz_info["state"] else 0)
                 for bulb in self.bulbs

@@ -1,12 +1,17 @@
 from tortoise.contrib.pydantic.creator import pydantic_model_creator
-from tortoise.fields import SET_NULL, CharField, ForeignKeyField, ForeignKeyNullableRelation
+from tortoise.fields import (
+    SET_NULL,
+    CharField,
+    ForeignKeyField,
+    ForeignKeyNullableRelation,
+)
 from tortoise.models import Model
 from tortoise.validators import validate_ipv4_address
 
 from src.models.helpers import GetItemMixin, TimestampMixin
 from src.models.icon import Icon
 from src.models.room import Room
-from src.wiz import send_message_to_wiz, MESSAGES, WizMessage
+from src.wiz import send_message_to_wiz, MESSAGES, WizMessage, BulbParameters
 
 
 class Bulb(Model, TimestampMixin, GetItemMixin):
@@ -31,6 +36,18 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
     async def toggle_state(self, state: bool) -> None:
         error, res = await send_message_to_wiz(
             self.ip, message=MESSAGES["ON"] if state else MESSAGES["OFF"]
+        )
+        await self.assign_wiz_info()
+
+    async def set_brightness(self, brightness: int) -> bool:
+        message = (
+            WizMessage(params=BulbParameters(state=True, brightness=brightness))
+            if brightness > 0
+            else MESSAGES["OFF"]
+        )
+        error, res = await send_message_to_wiz(
+            self.ip,
+            message,
         )
         await self.assign_wiz_info()
 

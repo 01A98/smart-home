@@ -32,6 +32,11 @@
         }
     ],
     "autoimport.filesToScan": "**/*.{py}",
+    "ruff.importStrategy": "fromEnvironment",
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    "ruff.lint.run": "onSave",
+    "editor.formatOnSave": true,
     "html.format.indentHandlebars": true,
     "html.format.templating": true,
     "html.format.wrapLineLength": 90,
@@ -44,6 +49,7 @@
     ],
     "pythonTestExplorer.testFramework": "pytest",
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "python.languageServer": "Pylance",
+    "python.languageServer": "Jedi",
+    "pythonTestExplorer.outputs.collectOutputs": false,
     
 }

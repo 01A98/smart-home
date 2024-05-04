@@ -7,7 +7,7 @@ from src.models.room import Room
 
 
 class RoomBrightnessSlider(button):
-    tagname = "form"
+    tagname = "div"
     id = "app-brightness-slider"
     route = "room_bulbs_brightness"
     app: Sanic
@@ -52,6 +52,7 @@ class RoomBrightnessSlider(button):
                     min="0"
                     max="100"
                     step="10"
+                    hx-post="{self.app.url_for("room-brigthness", id=self.room.id)}"
                 />
             """
             #     hx-post="{self.app.url_for("change_room_brightness", id=self.room.id)}"

@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import ByteString, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 
 UDP_PORT = 38899
 BULB_RESPONSE_TIMEOUT = 2
@@ -203,12 +203,12 @@ def parse_bulb_response(
 
 
 async def send_message_to_wiz(
-    ip: str, message: WizMessage
+    ip: str, message: WizMessage, port: int = UDP_PORT
 ) -> Union[
     tuple[Union[None, WizSetResult, WizGetResult]], tuple[Union[str, WizError], None]
 ]:
     try:
-        remote_addr = (ip, UDP_PORT)
+        remote_addr = (ip, port)
         no_response_error_message = "Bulb offline"
         message_bytes = message.model_dump_json(
             exclude_none=True,

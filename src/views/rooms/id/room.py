@@ -11,6 +11,20 @@ from src.forms.helpers import get_formdata
 from src.forms.room import RoomForm
 from src.models.room import Room
 from src.views import Page, BaseContext
+from src.control import change_brightness, toggle_state
+
+
+def get_room_state_from_form(form: RoomForm) -> bool:
+    previous_state = form.get("room_state_value")
+    updated_state = form.get("room_state", default=None)
+    # TODO: this might be a bug
+    bulb_state = None
+
+    if previous_state == "false" and updated_state == "on":
+        bulb_state = True
+    if previous_state == "true" and updated_state is not None:
+        bulb_state = False
+    return bulb_state
 
 
 def create_view(app: Sanic) -> None:
@@ -74,14 +88,7 @@ def create_view(app: Sanic) -> None:
                 raise BadRequest(str(form.errors.items()))
 
     async def toggle_room_state(request: Request, id: int):
-        previous_state = request.form.get("room_state_value")
-        updated_state = request.form.get("room_state", default=None)
-        bulb_state = None
-
-        if previous_state == "false" and updated_state == "on":
-            bulb_state = True
-        if previous_state == "true" and updated_state is not None:
-            bulb_state = False
+        bulb_state = get_room_state_from_form(request)
 
         room = await Room.get(id=id).prefetch_related("bulbs")
         await room.toggle_state(bulb_state)
@@ -99,12 +106,53 @@ def create_view(app: Sanic) -> None:
         return RoomLightSwitch(app, room).render()
 
     async def change_room_brightness(request: Request, id: int):
-        room = await Room.get(id=id).prefetch_related("bulbs")
-        await room.change_brightness(int(request.form.get("group_brightness")))
+        # room = await Room.get(id=id).prefetch_related("bulbs")
+        # {
+        #   'include-bulb-3': ['on'],
+        #   'include-bulb-8': ['on'],
+        #   'include-bulb-9': ['on'],
+        #   'group_brightness': ['30'],
+        #   'room_state_value': ['true'],
+        #   'room_state': ['on']
+        # }
+        # TODO: parse included bulbs in some function, add validation
+        included_bulb_suffix = "include-bulb-"
+        bulb_ids = [
+            int(key.replace(included_bulb_suffix, ""))
+            for key in request.form.keys()
+            if included_bulb_suffix in key
+        ]
+        brightness = int(request.form.get("group_brightness"))
+        await change_brightness(bulb_ids, brightness)
 
-        hx_trigger = "change-room-state"
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.assign_room_brightness()
         res = html(RoomBrightnessSlider(app, room).render())
-        res.headers.add("HX-Trigger", hx_trigger)
+
+        if len(bulb_ids) > 0:
+            hx_trigger = "change-room-state"
+            res.headers.add("HX-Trigger", hx_trigger)
+
+        return res
+
+    async def change_room_state(request: Request, id: int):
+        # TODO: parse included bulbs in some function, add validation
+        included_bulb_suffix = "include-bulb-"
+        bulb_ids = [
+            int(key.replace(included_bulb_suffix, ""))
+            for key in request.form.keys()
+            if included_bulb_suffix in key
+        ]
+        bulb_state = get_room_state_from_form(request.form)
+        await toggle_state(bulb_ids, bulb_state)
+
+        room = await Room.get(id=id).prefetch_related("bulbs")
+        await room.assign_room_brightness()
+        res = html(RoomBrightnessSlider(app, room).render())
+
+        if len(bulb_ids) > 0:
+            hx_trigger = "change-room-state"
+            res.headers.add("HX-Trigger", hx_trigger)
 
         return res
 
@@ -157,10 +205,17 @@ def create_view(app: Sanic) -> None:
     )
     #     TODO: refactor
     app.add_route(
-        lambda req, id: id,
-        "room-control/<id:int>",
-        name="room-control",
-        methods=["POST"]
+        change_room_brightness,
+        "room-brigthness/<id:int>",
+        name="room-brigthness",
+        methods=["POST"],
+    )
+    #     TODO: refactor
+    app.add_route(
+        change_room_state,
+        "room-state/<id:int>",
+        name="room-state",
+        methods=["POST"],
     )
 
 
@@ -168,7 +223,7 @@ def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
     form_id = f"room-{room.id}-state-form"
 
     with form(
-            id=form_id,
+        id=form_id,
     ) as form_:
         reference_input_value = "true" if room.bulbs_state else "false"
 
