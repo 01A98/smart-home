@@ -57,7 +57,7 @@ def create_view(app: Sanic) -> None:
 
         async def get(self, request: Request):
             rooms = await Room.filter(
-                name="Gabinet",
+                # name="Gabinet",
             ).prefetch_related("bulbs")
 
             base_ctx = BaseContext(app=app, current_page=self.page)
@@ -112,6 +112,11 @@ def create_view(app: Sanic) -> None:
         if not scene_id:
             return html("No scene_id provided", 400)
 
+        res = html("ok", 200)
+
+        if scene_id == 0:
+            return res
+
         # TODO: parse included bulbs in some function, add validation
         included_bulb_suffix = "include-bulb-"
         bulb_ids = [
@@ -121,7 +126,6 @@ def create_view(app: Sanic) -> None:
         ]
         await set_scene_id(bulb_ids, scene_id)
 
-        res = html("ok", 200)
         if len(bulb_ids) > 0:
             hx_trigger = "change-room-state"
             res.headers.add("HX-Trigger", hx_trigger)

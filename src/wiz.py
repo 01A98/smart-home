@@ -63,7 +63,11 @@ class BulbParameters(BaseModel):
         default=None, alias="brightness", ge=0, le=100, description="Brightness value"
     )
     sceneId: Optional[int] = Field(
-        default=None, ge=1, le=32, description="Predefined light mode ID"
+        # NOTE: 0 is for handling default settings
+        default=None,
+        ge=0,
+        le=32,
+        description="Predefined light mode ID",
     )
     speed: Optional[int] = Field(
         default=None, ge=10, le=200, description="Speed of dynamic light modes"
