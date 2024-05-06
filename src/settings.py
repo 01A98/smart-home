@@ -9,6 +9,14 @@ class Settings(BaseSettings):
     env: str
     db_url: Optional[Url] = Url("sqlite://db.sql")
     static_redirects: dict[str, str] = {"/home": "/"}
+    temperature_settings: list[tuple[str, str]] = [
+        ("warmest", "Najcieplejszy"),
+        ("warmer", "Cieplejszy"),
+        ("warm", "Ciepły"),
+        ("cold", "Chłodny"),
+        ("colder", "Chłodniejszy"),
+        ("coldest", "Najchłodniejszy"),
+    ]
     scenes: list[tuple[str, str]] = [
         ("1", "Ocean"),
         ("2", "Romance"),
@@ -42,7 +50,7 @@ class Settings(BaseSettings):
         ("30", "Golden white"),
         ("31", "Pulse"),
         ("32", "Steampunk"),
-        ("33", "Diwali")
+        ("33", "Diwali"),
     ]
 
 
