@@ -32,7 +32,9 @@ from src.components.material_icons import Icon
 from src.models.bulb import Bulb
 from src.models.room import Room
 from src.views import NAVIGATION, Page, BaseContext, ROUTES
+from src.wiz import send_message_to_wiz, MESSAGES
 from src.control import set_scene_id, set_temperature_by_name
+import asyncio
 
 
 @dataclass
@@ -41,6 +43,7 @@ class Routes:
     TURN_BULB_OFF: str = "turn_bulb_off"
     SELECT_SCENE_ID: str = "set_scene_id"
     SELECT_TEMPERATURE: str = "set_temperature_by_name"
+    TURN_ALL_OFF: str = "turn_all_off"
 
 
 @dataclass
@@ -80,6 +83,10 @@ def create_view(app: Sanic) -> None:
                             class_name="text-black bg-gray-100 hover:bg-gray-200 focus:outline-none "
                             "focus:ring-4 focus:ring-pink-600 font-medium max-w-screen-xl rounded-md text-md px-4 py-3 "
                             "text-center mr-6",
+                            **{
+                                "hx-post": app.url_for(ROUTES["turn_all_off"]),
+                                "hx-swap": "none",
+                            },
                         ),
                         class_name="flex flex-row justify-between items-end w-full mx-auto h-full pt-6 py-6 px-2",
                     ),
@@ -116,6 +123,17 @@ def create_view(app: Sanic) -> None:
             return res
 
         return handler
+
+    async def turn_all_off(request: Request):
+        bulbs = await Bulb.all()
+
+        await asyncio.gather(
+            *[send_message_to_wiz(bulb.ip, MESSAGES["OFF"]) for bulb in bulbs]
+        )
+
+        res = html("ok")
+        res.headers.add("HX-Trigger", "turn-all-off")
+        return res
 
     async def _set_scene_id(request: Request, id: int):
         scene_id: int = request.form.get("scene_id")
@@ -192,6 +210,10 @@ def create_view(app: Sanic) -> None:
         methods=["POST"],
         name=Routes.SELECT_TEMPERATURE,
     )
+    # TODO: move to own file?
+    app.add_route(
+        turn_all_off, "turn_all_off", methods=["POST"], name=Routes.TURN_ALL_OFF
+    )
 
     NAVIGATION["rooms"] = RoomsView.page
     ROUTES[BulbIcon.route] = BulbIcon.route
@@ -199,6 +221,7 @@ def create_view(app: Sanic) -> None:
     ROUTES[Routes.TURN_BULB_OFF] = Routes.TURN_BULB_OFF
     ROUTES[Routes.SELECT_SCENE_ID] = Routes.SELECT_SCENE_ID
     ROUTES[Routes.SELECT_TEMPERATURE] = Routes.SELECT_TEMPERATURE
+    ROUTES[Routes.TURN_ALL_OFF] = Routes.TURN_ALL_OFF
 
 
 def room_card_grid(
