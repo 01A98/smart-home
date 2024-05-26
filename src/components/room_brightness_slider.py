@@ -35,10 +35,14 @@ class RoomBrightnessSlider(button):
             class_name="w-full",
             **{
                 "hx-get": app.url_for(cls.route, id=room.id),
-                "hx-trigger": f"load, change-bulb-state from:#room-{room.id}, change-room-state from:#room-{room.id}",
+                "hx-trigger": cls._get_update_event(room),
                 "hx-swap": "innerHTML",
             },
         )
+
+    @staticmethod
+    def _get_update_event(room: Room) -> str:
+        return f"load, change-bulb-state from:#room-{room.id}, change-room-state from:#room-{room.id}, turn-all-off from:body"
 
     def _brightness_slider_input(self) -> raw:
         return raw(

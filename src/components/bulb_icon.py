@@ -14,7 +14,9 @@ class BulbIcon(button):
     tagname = "button"
     id = "app-bulb-icon"
     route = "bulb_with_state"
-    update_event = "load, change-room-state from:closest [event_container]"
+    update_event = (
+        "load, change-room-state from:closest [event_container], turn-all-off from:body"
+    )
 
     def __init__(
         self, app: Sanic, bulb: Bulb = None, state: Optional[bool] = None
