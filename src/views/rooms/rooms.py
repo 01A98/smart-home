@@ -28,6 +28,7 @@ from src.components.new_item_button import NewItemButton
 from src.components.nothing_here import NothingHere
 from src.components.room_brightness_slider import RoomBrightnessSlider
 from src.components.room_light_switch import RoomLightSwitch
+from src.components.material_icons import Icon
 from src.models.bulb import Bulb
 from src.models.room import Room
 from src.views import NAVIGATION, Page, BaseContext, ROUTES
@@ -74,10 +75,19 @@ def create_view(app: Sanic) -> None:
                 section(
                     div(
                         NewItemButton(href=app.url_for("RoomView", id="new")),
-                        class_name="block mx-auto w-full max-w-screen-xl py-6 px-2",
+                        button(
+                            Icon("power_off", class_name="material-symbols-rounded"),
+                            class_name="text-black bg-gray-100 hover:bg-gray-200 focus:outline-none "
+                            "focus:ring-4 focus:ring-pink-600 font-medium max-w-screen-xl rounded-md text-md px-4 py-3 "
+                            "text-center mr-6",
+                        ),
+                        class_name="flex flex-row justify-between items-end w-full mx-auto h-full pt-6 py-6 px-2",
                     ),
-                    room_card_grid(rooms, app, scenes, temperature_settings),
-                    class_name="w-full h-full max-w-screen-xl py-6 px-4 mx-auto mx-4",
+                    div(
+                        room_card_grid(rooms, app, scenes, temperature_settings),
+                        class_name="w-full h-full max-w-screen-xl pb-6 px-4 mx-auto mx-4",
+                    ),
+                    class_name="block w-full max-w-screen-xl mx-auto",
                 ),
                 title=self.page.title,
             )
