@@ -1,20 +1,21 @@
 from dataclasses import dataclass
-from typing import Callable, Coroutine, Any, Literal, Optional
-
+from typing import Set, Any, Callable, Coroutine, Literal, Optional
+import os
+import asyncio
 from dominate.tags import (
-    div,
-    section,
-    p,
-    html_tag,
-    small,
-    form,
-    span,
     button,
-    select,
-    option,
+    div,
+    form,
+    html_tag,
     label,
+    option,
+    p,
+    section,
+    select,
+    small,
+    span,
 )
-from sanic import Request, Sanic, HTTPResponse
+from sanic import HTTPResponse, Request, Sanic, json
 from sanic.response import html
 from sanic.views import HTTPMethodView
 from sanic_ext import serializer
@@ -28,12 +29,13 @@ from src.components.new_item_button import NewItemButton
 from src.components.nothing_here import NothingHere
 from src.components.room_brightness_slider import RoomBrightnessSlider
 from src.components.room_light_switch import RoomLightSwitch
+from src.control import set_scene_id, set_temperature_by_name
 from src.components.material_icons import Icon
 from src.models.bulb import Bulb
 from src.models.room import Room
-from src.views import NAVIGATION, Page, BaseContext, ROUTES
+from src.views import NAVIGATION, ROUTES, BaseContext, Page
 from src.wiz import send_message_to_wiz, MESSAGES
-from src.control import set_scene_id, set_temperature_by_name
+from src.utils import run_command
 import asyncio
 
 
@@ -184,6 +186,26 @@ def create_view(app: Sanic) -> None:
 
         return res
 
+    async def get_devices_on_network(request: Request):
+        bulbs = await Bulb.all()
+        bulb_with_ips = [(bulb.ip, bulb.name) for bulb in bulbs]
+
+        arp_scan = await run_command("arp-scan", "-l")
+        lines = [line.split("\t") for line in arp_scan.split("\n")]
+
+        filtered = list(filter(lambda line: line[0][:3] == "192", lines))
+        ip_addresses = [(ip, name) for ip, _mac, name in filtered]
+        res = {
+            "found_on_network": ip_addresses,
+            "bulbs": bulb_with_ips,
+            "found_but_not_in_bulbs": [
+                (ip, name)
+                for ip, name in ip_addresses
+                if ip not in [ip for ip, _name in bulb_with_ips]
+            ],
+        }
+        return json(res)
+
     app.add_route(RoomsView.as_view(), "/rooms")
     app.add_route(
         get_bulb_with_state,
@@ -213,6 +235,12 @@ def create_view(app: Sanic) -> None:
     # TODO: move to own file?
     app.add_route(
         turn_all_off, "turn_all_off", methods=["POST"], name=Routes.TURN_ALL_OFF
+    )
+    app.add_route(
+        get_devices_on_network,
+        "network_devices",
+        methods=["GET"],
+        name="network_devices",
     )
 
     NAVIGATION["rooms"] = RoomsView.page
