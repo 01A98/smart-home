@@ -162,18 +162,6 @@ def create_view(app: Sanic) -> None:
         await room.assign_room_brightness()
         return RoomBrightnessSlider(app, room).render()
 
-    async def room_bulbs_temp_name(request: Request, id: int):
-        room = await Room.get(id=id).prefetch_related("bulbs")
-        temp_name = request.args.get("temp_name")
-        await room.set_room_temp_by_name(temp_name)
-
-        return json(
-            {
-                "temp_name": temp_name,
-            },
-            headers={"HX-Trigger": f"reloadRoom{room.id}BulbsBrightness"},
-        )
-
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
 
     app.add_route(
@@ -184,11 +172,6 @@ def create_view(app: Sanic) -> None:
     app.add_route(
         change_room_brightness,
         "rooms/<id:int>/change-brightness",
-        methods=["POST"],
-    )
-    app.add_route(
-        room_bulbs_temp_name,
-        "rooms/<id:int>/bulbs-temp-name",
         methods=["POST"],
     )
     app.add_route(
