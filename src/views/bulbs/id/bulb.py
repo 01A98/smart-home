@@ -169,10 +169,8 @@ def create_view(app: Sanic) -> None:
     async def _process_control_form(bulb, request):
         BulbControlForm = bulb_control_form_factory(bulb, app)
         control_form = BulbControlForm(get_formdata(request))
-        control_form.previous_state.default = (
-            "True" if bulb.wiz_info["state"] else "False"
-        )
-        control_form.updated_state.default = bulb.wiz_info["state"]
+        control_form.previous_state.default = "True" if bulb.wiz_info.state else "False"
+        control_form.updated_state.default = bulb.wiz_info.state
         control_form.process()
         return control_form
 

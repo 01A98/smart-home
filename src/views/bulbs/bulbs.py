@@ -1,19 +1,19 @@
-from itertools import groupby
+from typing import Literal
 
+from dominate.svg import svg, circle
+from dominate.tags import div, section, span, nav, ul, li, p
 from sanic import Request, Sanic, html
 from sanic.views import HTTPMethodView
 from sanic_ext import serializer
 from tortoise.transactions import atomic
-from dominate.tags import div, section, a, h2, p, small
 
+from src.components.base_page import BasePage
+from src.components.breadcrumbs import Breadcrumbs
+from src.components.material_icons import Icon
+from src.components.new_item_button import NewItemButton
 from src.components.spinner import Spinner
 from src.models.bulb import Bulb
 from src.views import NAVIGATION, Page, BaseContext
-from src.components.base_page import BasePage
-from src.components.breadcrumbs import Breadcrumbs
-from src.components.new_item_button import NewItemButton
-from src.components.nothing_here import NothingHere
-from src.components.bulb_icon import BulbIcon
 
 
 def create_view(app: Sanic) -> None:
@@ -27,15 +27,6 @@ def create_view(app: Sanic) -> None:
         async def get(self, request: Request):
             bulbs = await Bulb.all().prefetch_related("room")
 
-            bulbs_by_room_name_grouped = groupby(
-                bulbs,
-                lambda bulb: bulb.room.name if bulb.room else "Bez przypisanego pokoju",
-            )
-            bulbs_by_room_name = {
-                room_name: list(bulbs)
-                for room_name, bulbs in bulbs_by_room_name_grouped
-            }
-
             base_ctx = BaseContext(app=app, current_page=self.page)
             navbar = base_ctx.app_navbar
 
@@ -48,63 +39,74 @@ def create_view(app: Sanic) -> None:
                 section(
                     div(
                         NewItemButton(href=app.url_for("BulbView", id="new")),
-                        class_name="block mx-auto w-full max-w-screen-xl pt-6 py-6 px-2",
+                        class_name="flex flex-row justify-between items-end w-full h-full my-4 mx-auto px-2",
                     ),
-                    div(
-                        *[
-                            self._room_section(room_name, bulbs, app)
-                            for room_name, bulbs in bulbs_by_room_name.items()
-                        ]
-                        or [NothingHere()],
-                        class_name="w-full h-full max-w-screen-xl py-6 px-4 mx-auto mx-4",
-                    ),
+                    bulbs_list(bulbs, app),
+                    # div(
+                    #     *[
+                    #         self._room_section(room_name, bulbs, app)
+                    #         for room_name, bulbs in bulbs_by_room_name.items()
+                    #     ]
+                    #     or [NothingHere()],
+                    #     class_name="w-full h-full max-w-screen-xl py-6 px-4 mx-auto mx-4",
+                    # ),
+                    class_name="block w-full max-w-screen-xl mx-auto",
                 ),
                 title=self.page.title,
             )
 
             return page_content.render()
 
-        @staticmethod
-        def _room_section(room_name, bulbs, app):
-            with div(
-                class_name="my-6 flex flex-col border border-gray-300 dark:border-gray-700 rounded-md p-8"
-            ):
-                a(
-                    h2(
-                        room_name,
-                        class_name="text-2xl font-bold text-gray-800 dark:text-gray-100",
-                    ),
-                    href=app.url_for("RoomView", id=bulbs[0].room_id)
-                    if bulbs[0].room
-                    else "#",
-                    class_name="self-end",
-                )
-                room_bulbs = [BulbsView._bulb_card(bulb, app) for bulb in bulbs]
-                return room_bulbs
+    async def get_bulb_state_indicator(request: Request, id: int):
+        type_: Literal["color"] | None = request.args.get("type")
+        bulb = await Bulb.get(id=id)
+        await bulb.assign_wiz_info()
+        state = bulb.wiz_info.state
 
-        @staticmethod
-        def _bulb_card(bulb, app):
-            with div(
-                class_name="my-8 min-w-fit rounded-md text-white bg-indigo-700 hover:bg-pink-700 flex flex-col shadow-gray-200 dark:shadow-gray-900 duration-300 hover:-translate-y-1"
-            ) as card:
-                with div(class_name="p-4 self-start"):
-                    a(
-                        bulb.name,
-                        class_name="text-lg hover:-translate-y-[2px] mb-4 font-semibold leading-relaxed text-gray-200 dark:text-white",
-                        href=app.url_for("BulbView", id=bulb.id),
-                    )
-                with div(id=f"bulb-info-{bulb.id}", class_name="px-2 mb-4"):
-                    div(
-                        **{
-                            "hx-get": app.url_for("bulb_with_state", id=bulb.id),
-                            "hx-trigger": "load",
-                            "hx-swap": "innerHTML",
-                            "hx-indicator": "app-spinner",
-                            "hx-target": f"#bulb-info-{bulb.id}",
-                        }
-                    )
-                    Spinner(htmx_indicator=True)
-            return card
+        content = svg(height=40, width=40, xmlns="http://www.w3.org/2000/svg")
+        if type_ == "color":
+            if state:
+                content.add(circle(fill="#90ee90", r="5", cx="20", cy="20"))
+            else:
+                content.add(circle(fill="#d1001f", r="5", cx="20", cy="20"))
+
+        return html(content.render())
 
     app.add_route(BulbsView.as_view(), "/bulbs")
+    app.add_route(
+        get_bulb_state_indicator, "/bulb_state/<id:int>", name="bulb_state_indicator"
+    )
     NAVIGATION["bulbs"] = BulbsView.page
+
+
+def bulbs_list(bulbs: list[Bulb], app: Sanic) -> nav:
+    with nav(
+        class_name="w-5/6 h-full my-6 mx-auto rounded-md gap-1 "
+        "font-sans text-blue-gray-700 shadow-md border border-gray-100"
+    ) as nav_:
+        with ul(class_name="w-full flex flex-col"):
+            for bulb in bulbs:
+                with li(
+                    class_name="w-full flex flex-row items-center justify-between rounded-md p-3 "
+                    "hover:bg-blue-500 hover:bg-opacity-80 hover:text-white focus:bg-blue-500 "
+                    "focus:bg-opacity-80 focus:text-white active:bg-blue-gray-50 "
+                ):
+                    Icon("lightbulb", class_name="material-symbols-rounded")
+                    p(bulb.name, class_name="text-xs")
+                    span(
+                        bulb.ip,
+                        role="button",
+                        class_name="px-2 py-1 font-sans text-xs font-bold text-gray-900 bg-gray-100 uppercase "
+                        "rounded-full",
+                    )
+                    div(
+                        Spinner(htmx_indicator=True),
+                        class_name="w-full",
+                        **{
+                            # TODO: change to constant url
+                            "hx-get": f"/bulb_state/{bulb.id}?type=color",
+                            "hx-swap": "outerHTML",
+                            "hx-trigger": "load",
+                        },
+                    )
+    return nav_

@@ -1,7 +1,8 @@
-from dataclasses import dataclass
-from typing import Set, Any, Callable, Coroutine, Literal, Optional
-import os
 import asyncio
+import shutil
+from dataclasses import dataclass
+from typing import Any, Callable, Coroutine, Literal, Optional
+
 from dominate.tags import (
     button,
     div,
@@ -25,18 +26,17 @@ from src.components.base_page import BasePage
 from src.components.breadcrumbs import Breadcrumbs
 from src.components.bulb_icon import BulbIcon
 from src.components.checkbox import Checkbox
+from src.components.material_icons import Icon
 from src.components.new_item_button import NewItemButton
 from src.components.nothing_here import NothingHere
 from src.components.room_brightness_slider import RoomBrightnessSlider
 from src.components.room_light_switch import RoomLightSwitch
 from src.control import set_scene_id, set_temperature_by_name
-from src.components.material_icons import Icon
 from src.models.bulb import Bulb
 from src.models.room import Room
+from src.utils import run_command
 from src.views import NAVIGATION, ROUTES, BaseContext, Page
 from src.wiz import send_message_to_wiz, MESSAGES
-from src.utils import run_command
-import asyncio
 
 
 @dataclass
@@ -90,11 +90,11 @@ def create_view(app: Sanic) -> None:
                                 "hx-swap": "none",
                             },
                         ),
-                        class_name="flex flex-row justify-between items-end w-full mx-auto h-full pt-6 py-6 px-2",
+                        class_name="flex flex-row justify-between items-end w-full h-full my-4 mx-auto px-2",
                     ),
                     div(
                         room_card_grid(rooms, app, scenes, temperature_settings),
-                        class_name="w-full h-full max-w-screen-xl pb-6 px-4 mx-auto mx-4",
+                        class_name="w-full h-full max-w-screen-xl pb-6 px-4 mx-auto",
                     ),
                     class_name="block w-full max-w-screen-xl mx-auto",
                 ),
@@ -190,11 +190,18 @@ def create_view(app: Sanic) -> None:
         bulbs = await Bulb.all()
         bulb_with_ips = [(bulb.ip, bulb.name) for bulb in bulbs]
 
+        command_exists = shutil.which("arp-scan") is not None
+        if not command_exists:
+            raise ValueError(
+                "Command 'arp-scan' not found on the system. Please install it using: sudo apt-get install arp-scan"
+            )
+
         arp_scan = await run_command("arp-scan", "-l")
         lines = [line.split("\t") for line in arp_scan.split("\n")]
 
         filtered = list(filter(lambda line: line[0][:3] == "192", lines))
         ip_addresses = [(ip, name) for ip, _mac, name in filtered]
+
         res = {
             "found_on_network": ip_addresses,
             "bulbs": bulb_with_ips,
@@ -204,6 +211,7 @@ def create_view(app: Sanic) -> None:
                 if ip not in [ip for ip, _name in bulb_with_ips]
             ],
         }
+
         return json(res)
 
     app.add_route(RoomsView.as_view(), "/rooms")
