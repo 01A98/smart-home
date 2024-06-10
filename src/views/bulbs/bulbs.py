@@ -53,14 +53,21 @@ def create_view(app: Sanic) -> None:
         type_: Literal["color"] | None = request.args.get("type")
         bulb = await Bulb.get(id=id)
         await bulb.assign_wiz_info()
-        state = bulb.wiz_info.state
+
+        state = None
+        if bulb.wiz_info and type(bulb.wiz_info.state) is bool:
+            state = bulb.wiz_info.state
 
         content = svg(height=40, width=40, xmlns="http://www.w3.org/2000/svg")
+        circle_ = circle(r="5", cx="20", cy="20")
         if type_ == "color":
-            if state:
-                content.add(circle(fill="#90ee90", r="5", cx="20", cy="20"))
+            if state is True:
+                circle_["fill"] = "#90ee90"
+            elif state is False:
+                circle_["fill"] = "#d1001f"
             else:
-                content.add(circle(fill="#d1001f", r="5", cx="20", cy="20"))
+                circle_["fill"] = "gray"
+        content.add(circle_)
 
         return html(content.render())
 

@@ -39,18 +39,6 @@ def create_view(app: Sanic) -> None:
         async def patch(request: Request, id: str):
             return html("Unimplemented", 404)
 
-    async def toggle_room_state(request: Request, id: int):
-        bulb_state = get_room_state_from_form(request)
-
-        room = await Room.get(id=id).prefetch_related("bulbs")
-        await room.toggle_state(bulb_state)
-
-        hx_trigger = "change-room-state"
-        res = html(RoomLightSwitch(app, room).render())
-        res.headers.add("HX-Trigger", hx_trigger)
-
-        return res
-
     @serializer(html)
     async def room_bulbs_state(request: Request, id: int):
         room = await Room.get(id=id).prefetch_related("bulbs")
@@ -116,11 +104,6 @@ def create_view(app: Sanic) -> None:
 
     app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
 
-    app.add_route(
-        toggle_room_state,
-        "rooms/<id:int>/toggle-state",
-        methods=["POST"],
-    )
     app.add_route(
         change_room_brightness,
         "rooms/<id:int>/change-brightness",

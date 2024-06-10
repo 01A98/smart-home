@@ -2,10 +2,10 @@ import asyncio
 import json
 from typing import ByteString, Literal, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from pydantic import BaseModel, Field
 
 UDP_PORT = 38899
-BULB_RESPONSE_TIMEOUT = 2
+BULB_RESPONSE_TIMEOUT = 1
 
 
 class FutureResponseDatagramProtocol(asyncio.DatagramProtocol):
