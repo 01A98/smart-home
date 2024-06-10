@@ -36,7 +36,7 @@ class BulbIcon(button):
         self["hx-swap"] = "outerHTML"
 
         with self:
-            if state or (bulb and bulb.wiz_info.state):
+            if state or (bulb and bulb.wiz_info and bulb.wiz_info.state):
                 Icon("lightbulb", class_name="material-symbols-rounded")
                 self["hx-get"] = app.url_for(ROUTES["turn_bulb_off"], id=bulb.id)
             elif not bulb.wiz_info:

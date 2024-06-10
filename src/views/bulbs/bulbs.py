@@ -42,14 +42,6 @@ def create_view(app: Sanic) -> None:
                         class_name="flex flex-row justify-between items-end w-full h-full my-4 mx-auto px-2",
                     ),
                     bulbs_list(bulbs, app),
-                    # div(
-                    #     *[
-                    #         self._room_section(room_name, bulbs, app)
-                    #         for room_name, bulbs in bulbs_by_room_name.items()
-                    #     ]
-                    #     or [NothingHere()],
-                    #     class_name="w-full h-full max-w-screen-xl py-6 px-4 mx-auto mx-4",
-                    # ),
                     class_name="block w-full max-w-screen-xl mx-auto",
                 ),
                 title=self.page.title,

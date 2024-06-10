@@ -47,7 +47,9 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         if not any(bulb.wiz_info for bulb in self.bulbs):
             self.bulbs_brightness = None
         else:
-            turned_on_bulbs = list(filter(lambda bulb: bulb.wiz_info.state, self.bulbs))
+            turned_on_bulbs = list(
+                filter(lambda bulb: bulb.wiz_info and bulb.wiz_info.state, self.bulbs)
+            )
             # TODO: handle when some are offline
             avg = (
                 sum(int(bulb.wiz_info.dimming) for bulb in turned_on_bulbs)

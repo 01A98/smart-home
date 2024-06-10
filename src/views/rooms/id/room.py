@@ -1,16 +1,12 @@
-from dominate.tags import form, input_, label, span, html_tag
-from sanic import BadRequest, Request, Sanic, json, html
-from sanic.response import redirect
+from sanic import Request, Sanic, html
 from sanic.views import HTTPMethodView
-from sanic_ext import render, serializer
+from sanic_ext import serializer
 from tortoise.transactions import atomic
 
 from src.components.room_brightness_slider import RoomBrightnessSlider
 from src.components.room_light_switch import RoomLightSwitch
-from src.forms.helpers import get_formdata
 from src.forms.room import RoomForm
 from src.models.room import Room
-from src.views import Page, BaseContext
 from src.control import change_brightness, toggle_state
 
 
@@ -30,62 +26,18 @@ def get_room_state_from_form(form: RoomForm) -> bool:
 def create_view(app: Sanic) -> None:
     class RoomView(HTTPMethodView):
         decorators = [atomic()]
-        template_path = "views/rooms/:id/get.html"
 
-        @classmethod
-        def page(cls, id: str):
-            if id == "new":
-                return Page(
-                    name="RoomView",
-                    title="Dodaj Pokój",
-                    template_path=cls.template_path,
-                )
-            else:
-                id_ = int(id)
-                return Page(
-                    name="RoomView",
-                    title=f"Pokój #{id_}",
-                    template_path=cls.template_path,
-                )
-
-        async def get(self, request: Request, id: str):
-            context = BaseContext(app=app, current_page=self.page(id)).model_dump()
-            form = RoomForm()
-            if id == "new":
-                context["new"] = True
-            else:
-                id_ = int(id)
-                room = await Room.get(id=id_)
-                form.name.default = room.name
-                form.description.default = room.description
-                form.process()
-                context["room"] = room
-
-            return await render(self.template_path, context=dict(form=form, **context))
+        @staticmethod
+        async def get(request: Request, id: str):
+            return html("Unimplemented", 404)
 
         @staticmethod
         async def post(request: Request, id: str):
-            form = RoomForm(get_formdata(request))
-            if form.validate():
-                await Room.create(
-                    name=form.name.data,
-                    description=form.description.data,
-                )
-                return redirect(app.url_for("RoomsView"), status=303)
-            if form.errors:
-                raise BadRequest(str(form.errors.items()))
+            return html("Unimplemented", 404)
 
         @staticmethod
         async def patch(request: Request, id: str):
-            form = RoomForm(get_formdata(request))
-            if form.validate():
-                await Room.filter(id=id).update(
-                    name=form.name.data,
-                    description=form.description.data,
-                )
-                return redirect(app.url_for("RoomsView"), status=303)
-            if form.errors:
-                raise BadRequest(str(form.errors.items()))
+            return html("Unimplemented", 404)
 
     async def toggle_room_state(request: Request, id: int):
         bulb_state = get_room_state_from_form(request)
@@ -116,11 +68,11 @@ def create_view(app: Sanic) -> None:
         #   'room_state': ['on']
         # }
         # TODO: parse included bulbs in some function, add validation
-        included_bulb_suffix = "include-bulb-"
+        included_bulb_prefix = "include-bulb-"
         bulb_ids = [
-            int(key.replace(included_bulb_suffix, ""))
+            int(key.replace(included_bulb_prefix, ""))
             for key in request.form.keys()
-            if included_bulb_suffix in key
+            if included_bulb_prefix in key
         ]
         brightness = int(request.form.get("group_brightness"))
         await change_brightness(bulb_ids, brightness)
@@ -137,11 +89,11 @@ def create_view(app: Sanic) -> None:
 
     async def change_room_state(request: Request, id: int):
         # TODO: parse included bulbs in some function, add validation
-        included_bulb_suffix = "include-bulb-"
+        included_bulb_prefix = "include-bulb-"
         bulb_ids = [
-            int(key.replace(included_bulb_suffix, ""))
+            int(key.replace(included_bulb_prefix, ""))
             for key in request.form.keys()
-            if included_bulb_suffix in key
+            if included_bulb_prefix in key
         ]
         bulb_state = get_room_state_from_form(request.form)
         await toggle_state(bulb_ids, bulb_state)
@@ -200,33 +152,3 @@ def create_view(app: Sanic) -> None:
         name="room-state",
         methods=["POST"],
     )
-
-
-def toggle_room_state_form(room: Room, app: Sanic) -> html_tag:
-    form_id = f"room-{room.id}-state-form"
-
-    with form(
-        id=form_id,
-    ) as form_:
-        reference_input_value = "true" if room.bulbs_state else "false"
-
-        input_(type="hidden", name="room_state_value", value=reference_input_value)
-        label(
-            span("Włącz lub wyłącz wszystkie zarówki", class_name="sr-only"),
-            html_for="room_state",
-            class_name="flex items-center",
-        )
-        input_(
-            name="room_state",
-            id="room_state",
-            type="checkbox",
-            toggle=True,
-            **{"checked": room.bulbs_state} if room.bulbs_state else {},
-            **{
-                "hx-post": app.url_for("toggle_room_state", id=room.id),
-                "hx-target": f"#{form_id}",
-                "hx-swap": "outerHTML",
-            },
-        )
-
-    return form_

@@ -17,10 +17,10 @@ from src.views.rooms.rooms import create_view as create_rooms_view
 
 def attach_endpoints(app: Sanic):
     create_home_view(app)
-    create_bulbs_view(app)
-    create_bulbs_id_view(app)
     create_rooms_view(app)
     create_rooms_id_view(app)
+    create_bulbs_view(app)
+    create_bulbs_id_view(app)
     create_more_view(app)
 
 
