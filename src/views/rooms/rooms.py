@@ -15,6 +15,7 @@ from dominate.tags import (
     select,
     small,
     span,
+    ul,
 )
 from sanic import HTTPResponse, Request, Sanic, json
 from sanic.response import html
@@ -79,7 +80,7 @@ def create_view(app: Sanic) -> None:
                 ),
                 section(
                     div(
-                        NewItemButton(href=app.url_for("RoomView", id="new")),
+                        NewItemButton(href=app.url_for("new_room")),
                         button(
                             Icon("power_off", class_name="material-symbols-rounded"),
                             class_name="text-black bg-gray-100 hover:bg-gray-200 focus:outline-none "
@@ -413,5 +414,61 @@ def room_card(
                             "Wybierz temperaturę koloru",
                             class_name="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-blue-gray-400 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-gray-900 peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:border-gray-900 peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:border-gray-900 peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500",
                         )
+
+        # More options
+        data_popover_target = f"room-{room.id}-options-menu"
+        with Icon(
+            "more_horiz",
+            class_name="self-end px-4 pb-2 relative text-[42px] inline-block cursor-pointer material-icons-round",
+            data_popover_target=data_popover_target,
+        ) as icon_:
+            with ul(
+                role="menu",
+                data_popover=data_popover_target,
+                data_popover_placement="left",
+                class_name="absolute z-10 flex min-w-[180px] flex-col gap-2 overflow-auto rounded-md border "
+                "border-blue-gray-50 bg-white p-3 font-sans text-sm font-normal text-blue-gray-500 "
+                "shadow-lg shadow-blue-gray-500/10 focus:outline-none",
+            ):
+                with button(
+                    role="menuitem",
+                    class_name="flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-3 pt-[9px] "
+                    "pb-2 text-start leading-tight outline-none transition-all hover:bg-blue-gray-50 "
+                    "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
+                    "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
+                    "active:bg-opacity-80 active:text-blue-gray-900",
+                    onClick="""event.preventDefault(); Swal.fire({title: "Zatwierdź usunięcie", text: "Czy na pewno chcesz usunąć ten pokój?"})
+                            .then((result) => {
+                                if(result.isConfirmed){
+                                  htmx.trigger(this, "confirmed");
+                                }
+                            });
+                        """,
+                    **{
+                        "hx-delete": app.url_for("RoomView", id=room.id),
+                        "hx-trigger": "confirmed",
+                    },
+                ):
+                    Icon("delete")
+                    p(
+                        "Usuń pokój",
+                        class_name="block font-sans text-sm antialiased font-medium leading-normal text-inherit",
+                    )
+                with button(
+                    role="menuitem",
+                    class_name="flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-3 pt-[9px] "
+                    "pb-2 text-start leading-tight outline-none transition-all hover:bg-blue-gray-50 "
+                    "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
+                    "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
+                    "active:bg-opacity-80 active:text-blue-gray-900",
+                    **{
+                        "hx-patch": "edit",  # TODO: implement
+                    },
+                ):
+                    Icon("edit")
+                    p(
+                        "Edytuj pokój",
+                        class_name="block font-sans text-sm antialiased font-medium leading-normal text-inherit",
+                    )
 
     return div_

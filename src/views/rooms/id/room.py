@@ -1,13 +1,16 @@
-from sanic import Request, Sanic, html
+from dominate.tags import section, div
+from sanic import Request, Sanic, html, redirect
 from sanic.views import HTTPMethodView
 from sanic_ext import serializer
 from tortoise.transactions import atomic
 
+from src.components.base_page import BasePage
+from src.components.breadcrumbs import Breadcrumbs
 from src.components.room_brightness_slider import RoomBrightnessSlider
 from src.components.room_light_switch import RoomLightSwitch
-from src.forms.room import RoomForm
-from src.models.room import Room
+from src.models.room import Room, RoomForm
 from src.control import change_brightness, toggle_state
+from src.views import Page, BaseContext
 
 
 def get_room_state_from_form(form: RoomForm) -> bool:
@@ -28,16 +31,47 @@ def create_view(app: Sanic) -> None:
         decorators = [atomic()]
 
         @staticmethod
-        async def get(request: Request, id: str):
-            return html("Unimplemented", 404)
+        async def post(request: Request):
+            form = RoomForm(request.form)
+            await Room.create(**form.data)
+            return redirect(app.url_for("RoomsView"))
 
         @staticmethod
-        async def post(request: Request, id: str):
-            return html("Unimplemented", 404)
+        async def delete(request: Request):
+            room_id = request.args.get("id")
+            await Room.filter(id=room_id).delete()
+            return redirect(
+                app.url_for("RoomsView"),
+                status=204,
+                headers={"HX-Location": app.url_for("RoomsView")},
+            )
 
-        @staticmethod
-        async def patch(request: Request, id: str):
-            return html("Unimplemented", 404)
+    @serializer(html)
+    async def new_room(request: Request):
+        page = Page(
+            name="new_room",
+            title="Nowy Pokój",
+        )
+
+        base_ctx = BaseContext(app=app, current_page=page)
+        navbar = base_ctx.app_navbar
+
+        page_content = BasePage(
+            navbar,
+            div(
+                Breadcrumbs(
+                    app, base_ctx.navigation["home"], base_ctx.navigation["rooms"], page
+                ),
+                class_name="w-full max-w-screen-xl mx-auto p-2",
+            ),
+            section(
+                Room.get_form(),
+                class_name="block w-full max-w-screen-xl mx-auto",
+            ),
+            title=page.title,
+        )
+
+        return page_content.render()
 
     @serializer(html)
     async def room_bulbs_state(request: Request, id: int):
@@ -102,22 +136,22 @@ def create_view(app: Sanic) -> None:
         await room.assign_room_brightness()
         return RoomBrightnessSlider(app, room).render()
 
-    app.add_route(RoomView.as_view(), "/rooms/<id:strorempty>")
-
+    app.add_route(RoomView.as_view(), "/room")
+    app.add_route(new_room, "rooms/new", methods=["GET"], name="new_room")
     app.add_route(
         change_room_brightness,
-        "rooms/<id:int>/change-brightness",
+        "room/<id:int>/change-brightness",
         methods=["POST"],
     )
     app.add_route(
         room_bulbs_state,
-        "rooms/<id:int>/bulbs-state",
+        "room/<id:int>/bulbs-state",
         methods=["GET"],
         name=RoomLightSwitch.route,
     )
     app.add_route(
         room_bulbs_brightness,
-        "rooms/<id:int>/bulbs-brightness",
+        "room/<id:int>/bulbs-brightness",
         methods=["GET"],
         name=RoomBrightnessSlider.route,
     )

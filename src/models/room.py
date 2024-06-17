@@ -1,26 +1,26 @@
 import asyncio
 from typing import Union
 
-from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.fields import (
     SET_NULL,
-    BooleanField,
-    CharField,
-    ForeignKeyField,
-    TextField,
     ForeignKeyNullableRelation,
 )
 from tortoise.models import Model
+from tortoise import fields
+from wtforms import validators
+from wtforms.fields.simple import TextAreaField, StringField
+from wtforms.form import Form
 
+from src.forms.form_builder import build_form
 from src.models.helpers import GetItemMixin, TimestampMixin, PydanticMixin
 from src.models.icon import Icon
 
 
 class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
-    name = CharField(max_length=128, unique=True)
-    description = TextField(null=True)
-    is_favorite = BooleanField(default=False)
-    icon: ForeignKeyNullableRelation[Icon] = ForeignKeyField(
+    name = fields.CharField(max_length=128, unique=True)
+    description = fields.TextField(null=True)
+    is_favorite = fields.BooleanField(default=False)
+    icon: ForeignKeyNullableRelation[Icon] = fields.ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL
     )
 
@@ -29,6 +29,34 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def get_form():
+        return build_form(RoomForm())
+
+    @classmethod
+    def get_room_fields(cls):
+        return dict(
+            map(lambda field: (field["name"], field), cls.describe()["data_fields"])
+        )
+
+    @classmethod
+    def get_name_form_validators(cls):
+        name_field = cls.get_room_fields()["name"]
+        name_validators = []
+
+        if name_field["constraints"]["max_length"]:
+            name_validators.append(
+                validators.Length(
+                    min=1,
+                    max=name_field["constraints"]["max_length"],
+                    message="Nazwa musi mieć od 1 do 128 znaków",
+                )
+            )
+        if name_field["nullable"] is False:
+            name_validators.append(validators.InputRequired())
+
+        return name_validators
 
     async def assign_room_state(self) -> None:
         await asyncio.gather(*[bulb.assign_wiz_info() for bulb in self.bulbs])
@@ -59,4 +87,9 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
             self.bulbs_brightness = int(avg)
 
 
-Room_Py = pydantic_model_creator(Room, name="Room")
+class RoomForm(Form):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    name = StringField("Nazwa", Room.get_name_form_validators())
+    description = TextAreaField("Opis")

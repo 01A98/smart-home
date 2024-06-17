@@ -24,7 +24,7 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
     ip = CharField(validators=[validate_ipv4_address], max_length=15, unique=True)
     name = CharField(max_length=128)
     room: ForeignKeyNullableRelation[Room] = ForeignKeyField(
-        "models.Room", null=True, on_delete=SET_NULL
+        "models.Room", null=True, on_delete=SET_NULL, related_name="bulbs"
     )
     icon: ForeignKeyNullableRelation[Icon] = ForeignKeyField(
         "models.Icon", null=True, on_delete=SET_NULL

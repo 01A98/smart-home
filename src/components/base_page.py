@@ -140,22 +140,30 @@ class BasePage(document):
         script(
             src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js",
             defer=True,
-            **{
-                "hx-head": "re-eval"
-            }
+            **{"hx-head": "re-eval"},
         )
         script(
             src="https://unpkg.com/@material-tailwind/html@latest/scripts/collapse.js",
             defer=True,
-            **{
-                "hx-head": "re-eval"
-            }
+            **{"hx-head": "re-eval"},
+        )
+        script(
+            src="https://unpkg.com/@material-tailwind/html@latest/scripts/popover.js",
+            defer=True,
+            type="module",
+            # **{"hx-head": "re-eval"},
         )
 
+        # sweetalert2
+        script(src="https://cdn.jsdelivr.net/npm/sweetalert2@11")
+        # script("window.Swal = this.Swal = this.Sweetalert2;", type="text/javascript")
+
         # AlpineJS
-        script(src="//unpkg.com/alpinejs", defer=True)
+        script(src="https://unpkg.com/alpinejs@3.14.0", defer=True)
 
         # HTMX
         script(src="https://unpkg.com/htmx.org@1.9.10")
         script(src="https://unpkg.com/htmx.org/dist/ext/head-support.js")
         script("htmx.config.globalViewTransitions = true;", type="text/javascript")
+
+        # TODO: use swup!

@@ -1,7 +1,6 @@
 from typing import Optional
 
 from dominate.tags import button, p, div
-from dominate.util import raw
 from sanic import Sanic
 
 from src.components.material_icons import Icon
@@ -47,11 +46,11 @@ class BulbIcon(button):
                 self["hx-get"] = app.url_for(ROUTES["turn_bulb_on"], id=bulb.id)
             p(bulb.name)
             # TODO: trigger script rerun instead with htmx if possible
-            raw(
-                """
-                <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js"></script>
-            """
-            )
+            # raw(
+            #     """
+            #     <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js"></script>
+            # """
+            # )
 
     @classmethod
     def lazy_load(cls, app: Sanic, bulb: Bulb) -> div:

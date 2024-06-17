@@ -60,11 +60,11 @@ class Breadcrumbs(nav):
                     ):
                         with span(
                             class_name="flex items-center transition-colors hover:text-blue-500"
-                        ):
+                        ) as span_:
                             if ix == 0:
                                 Icon("home")
                             else:
-                                page.title
+                                span_.add(page.title)
 
                     span(
                         Icon("chevron_right"),
