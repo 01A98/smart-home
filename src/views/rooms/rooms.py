@@ -15,7 +15,6 @@ from dominate.tags import (
     select,
     small,
     span,
-    ul,
 )
 from sanic import HTTPResponse, Request, Sanic, json
 from sanic.response import html
@@ -27,6 +26,7 @@ from src.components.base_page import BasePage
 from src.components.breadcrumbs import Breadcrumbs
 from src.components.bulb_icon import BulbIcon
 from src.components.checkbox import Checkbox
+from src.components.crud_options import CrudOptionsMenu
 from src.components.material_icons import Icon
 from src.components.new_item_button import NewItemButton
 from src.components.nothing_here import NothingHere
@@ -80,18 +80,23 @@ def create_view(app: Sanic) -> None:
                 ),
                 section(
                     div(
-                        NewItemButton(href=app.url_for("new_room")),
+                        div(
+                            NewItemButton(href=app.url_for("new_room")),
+                            class_name="px-4",
+                        ),
                         button(
                             Icon("power_off", class_name="material-symbols-rounded"),
                             class_name="text-black bg-gray-100 hover:bg-gray-200 focus:outline-none "
-                            "focus:ring-4 focus:ring-pink-600 font-medium max-w-screen-xl rounded-md text-md px-4 py-3 "
-                            "text-center mr-6",
+                            "focus:ring-4 focus:ring-pink-600 font-medium max-w-screen-xl rounded-md text-md px-4 "
+                            "text-center mr-6 py-3",
+                            data_ripple_light="true",
+                            data_ripple_dark="true",
                             **{
                                 "hx-post": app.url_for(ROUTES["turn_all_off"]),
                                 "hx-swap": "none",
                             },
                         ),
-                        class_name="flex flex-row justify-between items-end w-full h-full my-4 mx-auto px-2",
+                        class_name="flex flex-row justify-between items-center w-full h-full my-6 mx-auto px-2",
                     ),
                     div(
                         room_card_grid(rooms, app, scenes, temperature_settings),
@@ -416,59 +421,12 @@ def room_card(
                         )
 
         # More options
-        data_popover_target = f"room-{room.id}-options-menu"
-        with Icon(
+        CrudOptionsMenu(
             "more_horiz",
-            class_name="self-end px-4 pb-2 relative text-[42px] inline-block cursor-pointer material-icons-round",
-            data_popover_target=data_popover_target,
-        ) as icon_:
-            with ul(
-                role="menu",
-                data_popover=data_popover_target,
-                data_popover_placement="left",
-                class_name="absolute z-10 flex min-w-[180px] flex-col gap-2 overflow-auto rounded-md border "
-                "border-blue-gray-50 bg-white p-3 font-sans text-sm font-normal text-blue-gray-500 "
-                "shadow-lg shadow-blue-gray-500/10 focus:outline-none",
-            ):
-                with button(
-                    role="menuitem",
-                    class_name="flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-3 pt-[9px] "
-                    "pb-2 text-start leading-tight outline-none transition-all hover:bg-blue-gray-50 "
-                    "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
-                    "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
-                    "active:bg-opacity-80 active:text-blue-gray-900",
-                    onClick="""event.preventDefault(); Swal.fire({title: "Zatwierdź usunięcie", text: "Czy na pewno chcesz usunąć ten pokój?"})
-                            .then((result) => {
-                                if(result.isConfirmed){
-                                  htmx.trigger(this, "confirmed");
-                                }
-                            });
-                        """,
-                    **{
-                        "hx-delete": app.url_for("RoomView", id=room.id),
-                        "hx-trigger": "confirmed",
-                    },
-                ):
-                    Icon("delete")
-                    p(
-                        "Usuń pokój",
-                        class_name="block font-sans text-sm antialiased font-medium leading-normal text-inherit",
-                    )
-                with button(
-                    role="menuitem",
-                    class_name="flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-3 pt-[9px] "
-                    "pb-2 text-start leading-tight outline-none transition-all hover:bg-blue-gray-50 "
-                    "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
-                    "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
-                    "active:bg-opacity-80 active:text-blue-gray-900",
-                    **{
-                        "hx-patch": "edit",  # TODO: implement
-                    },
-                ):
-                    Icon("edit")
-                    p(
-                        "Edytuj pokój",
-                        class_name="block font-sans text-sm antialiased font-medium leading-normal text-inherit",
-                    )
+            app.url_for("RoomView", id=room.id),
+            "edit",  # TODO:
+            "Usuń pokój",
+            "Edytuj pokój",
+        )
 
     return div_

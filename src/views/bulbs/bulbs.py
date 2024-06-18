@@ -9,6 +9,7 @@ from tortoise.transactions import atomic
 
 from src.components.base_page import BasePage
 from src.components.breadcrumbs import Breadcrumbs
+from src.components.crud_options import CrudOptionsMenu
 from src.components.material_icons import Icon
 from src.components.new_item_button import NewItemButton
 from src.components.spinner import Spinner
@@ -38,8 +39,11 @@ def create_view(app: Sanic) -> None:
                 ),
                 section(
                     div(
-                        NewItemButton(href=app.url_for("BulbView", id="new")),
-                        class_name="flex flex-row justify-between items-end w-full h-full my-4 mx-auto px-2",
+                        div(
+                            NewItemButton(href=app.url_for("new_bulb")),
+                            class_name="px-4",
+                        ),
+                        class_name="flex flex-row justify-between items-center w-full h-full my-6 mx-auto py-4 px-2",
                     ),
                     bulbs_list(bulbs, app),
                     class_name="block w-full max-w-screen-xl mx-auto",
@@ -80,7 +84,7 @@ def create_view(app: Sanic) -> None:
 
 def bulbs_list(bulbs: list[Bulb], app: Sanic) -> nav:
     with nav(
-        class_name="w-5/6 h-full my-6 mx-auto rounded-md gap-1 "
+        class_name="w-5/6 h-full mx-auto rounded-md gap-1 "
         "font-sans text-blue-gray-700 shadow-md border border-gray-100"
     ) as nav_:
         with ul(class_name="w-full flex flex-col"):
@@ -107,5 +111,13 @@ def bulbs_list(bulbs: list[Bulb], app: Sanic) -> nav:
                             "hx-swap": "outerHTML",
                             "hx-trigger": "load",
                         },
+                    )
+                    # More options
+                    CrudOptionsMenu(
+                        "more_horiz",
+                        app.url_for("BulbView", id=bulb.id),
+                        "edit",  # TODO:
+                        "Usuń żarówkę",
+                        "Edytuj żarówkę",
                     )
     return nav_

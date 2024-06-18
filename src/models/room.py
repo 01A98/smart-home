@@ -1,6 +1,7 @@
 import asyncio
 from typing import Union
 
+import wtforms
 from tortoise.fields import (
     SET_NULL,
     ForeignKeyNullableRelation,
@@ -8,7 +9,6 @@ from tortoise.fields import (
 from tortoise.models import Model
 from tortoise import fields
 from wtforms import validators
-from wtforms.fields.simple import TextAreaField, StringField
 from wtforms.form import Form
 
 from src.forms.form_builder import build_form
@@ -31,8 +31,8 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         return self.name
 
     @staticmethod
-    def get_form():
-        return build_form(RoomForm())
+    def get_form(action: str):
+        return build_form(RoomForm(), action)
 
     @classmethod
     def get_room_fields(cls):
@@ -91,5 +91,5 @@ class RoomForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    name = StringField("Nazwa", Room.get_name_form_validators())
-    description = TextAreaField("Opis")
+    name = wtforms.StringField("Nazwa", Room.get_name_form_validators())
+    description = wtforms.TextAreaField("Opis")

@@ -1,13 +1,9 @@
-from typing import Union
+from typing import List
 
 from markupsafe import Markup
 from multidict import MultiDict
 from sanic import Request
-
-from src.models.bulb import Bulb
-from src.models.icon import Icon
-from src.models.room import Room
-from src.models.setting import Setting
+from tortoise import Model
 
 
 def get_input_classes():
@@ -41,10 +37,10 @@ def get_formdata(request: Request):
 
 
 def get_choices(
-    records: Union[list[Room], list[Bulb], list[Icon], list[Setting]],
+    records: List[Model],
     option_value_field: str = "name",
     is_optional: bool = True,
-) -> list[tuple[int, str]]:
+) -> List[tuple[int, str]]:
     choices = []
     if is_optional:
         choices.append((99999, "Brak"))

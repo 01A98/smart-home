@@ -65,7 +65,7 @@ def create_view(app: Sanic) -> None:
                 class_name="w-full max-w-screen-xl mx-auto p-2",
             ),
             section(
-                Room.get_form(),
+                Room.get_form(app.url_for("RoomView")),
                 class_name="block w-full max-w-screen-xl mx-auto",
             ),
             title=page.title,

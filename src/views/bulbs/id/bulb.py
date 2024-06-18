@@ -1,11 +1,17 @@
 import random
 from dataclasses import dataclass
 
-from sanic import Request, Sanic, html, json
+from dominate.tags import section, div
+from sanic import Request, Sanic, html, json, redirect
 from sanic.views import HTTPMethodView
+from sanic_ext import serializer
 from tortoise.transactions import atomic
 
-from src.models.bulb import Bulb
+from src.components.base_page import BasePage
+from src.components.breadcrumbs import Breadcrumbs
+from src.models.bulb import Bulb, BulbForm
+from src.models.room import Room
+from src.views import Page, BaseContext
 from src.wiz import BulbParameters, WizMessage
 
 
@@ -19,20 +25,55 @@ def create_view(app: Sanic) -> None:
         decorators = [atomic()]
 
         @staticmethod
-        async def get(request: Request, id: str):
-            return html("Unimplemented", 404)
+        async def post(request: Request):
+            form = BulbForm(request.form)
+            # TODO: move somewhere, figure out imports to avoid circ
+            NO_ROOM_ID = "99999"
+
+            if form.data.get("room_id") == NO_ROOM_ID:
+                del form.room_id
+
+            await Bulb.create(**form.data)
+            return redirect(app.url_for("BulbsView"))
 
         @staticmethod
-        async def post(request: Request, id: str):
-            return html("Unimplemented", 404)
+        async def delete(request: Request):
+            room_id = request.args.get("id")
+            await Bulb.filter(id=room_id).delete()
+            return redirect(
+                app.url_for("BulbsView"),
+                status=204,
+                headers={"HX-Location": app.url_for("BulbsView")},
+            )
 
-        @staticmethod
-        async def patch(request: Request, id: str):
-            return html("Unimplemented", 404)
+    @serializer(html)
+    @atomic()
+    async def new_bulb(request: Request):
+        page = Page(
+            name="new_bulb",
+            title="Nowa Żarówka",
+        )
+        rooms = await Room.all()
 
-        @staticmethod
-        async def delete(request: Request, id: str):
-            return html("Unimplemented", 404)
+        base_ctx = BaseContext(app=app, current_page=page)
+        navbar = base_ctx.app_navbar
+
+        page_content = BasePage(
+            navbar,
+            div(
+                Breadcrumbs(
+                    app, base_ctx.navigation["home"], base_ctx.navigation["bulbs"], page
+                ),
+                class_name="w-full max-w-screen-xl mx-auto p-2",
+            ),
+            section(
+                Bulb.get_form(app.url_for("BulbView"), rooms),
+                class_name="block w-full max-w-screen-xl mx-auto",
+            ),
+            title=page.title,
+        )
+
+        return page_content.render()
 
     # TODO: add option for room view alongside other inputs
     async def pick_random_color(request: Request, id: int):
@@ -52,7 +93,8 @@ def create_view(app: Sanic) -> None:
             headers={"HX-Trigger": f"reload-bulb-{bulb.id}-control-form"},
         )
 
-    app.add_route(BulbView.as_view(), "/bulbs/<id:strorempty>")
+    app.add_route(BulbView.as_view(), "/bulb")
+    app.add_route(new_bulb, "bulbs/new", methods=["GET"], name="new_bulb")
 
     app.add_route(
         pick_random_color,
