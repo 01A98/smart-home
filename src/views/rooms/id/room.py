@@ -1,3 +1,4 @@
+from dominate import document
 from dominate.tags import section, div
 from sanic import Request, Sanic, html, redirect
 from sanic.views import HTTPMethodView
@@ -34,7 +35,22 @@ def create_view(app: Sanic) -> None:
         async def post(request: Request):
             form = RoomForm(request.form)
             await Room.create(**form.data)
-            return redirect(app.url_for("RoomsView"))
+            return redirect(
+                app.url_for("RoomsView"),
+                status=204,
+                headers={"HX-Location": app.url_for("RoomsView")},
+            )
+
+        @staticmethod
+        async def patch(request: Request):
+            room_id = request.args.get("id")
+            form = RoomForm(request.form)
+            await Room.filter(id=room_id).update(**form.data)
+            return redirect(
+                app.url_for("RoomsView"),
+                status=204,
+                headers={"HX-Location": app.url_for("RoomsView")},
+            )
 
         @staticmethod
         async def delete(request: Request):
@@ -43,16 +59,38 @@ def create_view(app: Sanic) -> None:
             return redirect(
                 app.url_for("RoomsView"),
                 status=204,
-                headers={"HX-Location": app.url_for("RoomsView")},
+                headers={
+                    "HX-Refresh": "true",
+                },
             )
 
     @serializer(html)
+    @atomic()
     async def new_room(request: Request):
         page = Page(
             name="new_room",
             title="Nowy Pokój",
         )
+        room_form = Room.get_form({"hx-post": app.url_for("RoomView")})
+        view = _get_room_view(page, room_form)
+        return view.render()
 
+    @serializer(html)
+    @atomic()
+    async def edit_room(request: Request, room_id: int):
+        page = Page(
+            name="edit_room",
+            title="Edytuj Pokój",
+        )
+
+        room = await Room.get(id=room_id)
+        room_form = Room.get_form(
+            {"hx-patch": app.url_for("RoomView", id=room.id)}, room
+        )
+        view = _get_room_view(page, room_form)
+        return view.render()
+
+    def _get_room_view(page: Page, room_gorm: RoomForm) -> document:
         base_ctx = BaseContext(app=app, current_page=page)
         navbar = base_ctx.app_navbar
 
@@ -65,13 +103,13 @@ def create_view(app: Sanic) -> None:
                 class_name="w-full max-w-screen-xl mx-auto p-2",
             ),
             section(
-                Room.get_form(app.url_for("RoomView")),
+                room_gorm,
                 class_name="block w-full max-w-screen-xl mx-auto",
             ),
             title=page.title,
         )
 
-        return page_content.render()
+        return page_content
 
     @serializer(html)
     async def room_bulbs_state(request: Request, id: int):
@@ -138,6 +176,10 @@ def create_view(app: Sanic) -> None:
 
     app.add_route(RoomView.as_view(), "/room")
     app.add_route(new_room, "rooms/new", methods=["GET"], name="new_room")
+    app.add_route(
+        edit_room, "rooms/edit/<room_id:int>", methods=["GET"], name="edit_room"
+    )
+
     app.add_route(
         change_room_brightness,
         "room/<id:int>/change-brightness",

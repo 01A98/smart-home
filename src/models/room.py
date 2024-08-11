@@ -1,5 +1,5 @@
 import asyncio
-from typing import Union
+from typing import Union, Optional
 
 import wtforms
 from tortoise.fields import (
@@ -31,8 +31,9 @@ class Room(Model, TimestampMixin, GetItemMixin, PydanticMixin):
         return self.name
 
     @staticmethod
-    def get_form(action: str):
-        return build_form(RoomForm(), action)
+    def get_form(htmx_options: dict[str, str], room: Optional["Room"] = {}):
+        room_form = RoomForm(**dict(room))
+        return build_form(room_form, htmx_options)
 
     @classmethod
     def get_room_fields(cls):

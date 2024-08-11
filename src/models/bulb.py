@@ -1,3 +1,5 @@
+from typing import Optional
+
 import wtforms
 from tortoise import fields
 from tortoise.fields import (
@@ -42,13 +44,14 @@ class Bulb(Model, TimestampMixin, GetItemMixin):
         return self.name
 
     @staticmethod
-    def get_form(action: str, rooms: list[Room]):
-        bulb_form = BulbForm()
-
+    def get_form(
+        htmx_options: dict[str, str], rooms: list[Room], bulb: Optional["Bulb"] = {}
+    ):
+        bulb_form = BulbForm(**dict(bulb))
         choices = get_choices(rooms, "name")
         bulb_form.room_id.choices = choices
 
-        return build_form(bulb_form, action)
+        return build_form(bulb_form, htmx_options)
 
     # TODO: use mixin?
     @classmethod
@@ -127,10 +130,10 @@ class BulbForm(Form):
     name = wtforms.StringField("Nazwa", Bulb.get_name_form_validators())
     # TODO: ip should be unique, figure out async validators or use htmx
     ip = wtforms.StringField("Adres IP żarówki", Bulb.get_ip_address_validators())
-    description = wtforms.TextAreaField("Opis")
     room_id = wtforms.SelectField(
         "Pokój",
         [wtforms.validators.Optional()],
         coerce=str,
         default="",
+        # render_kw={"autocomplete": "off"},
     )

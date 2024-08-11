@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from dominate.tags import nav, a, ol, li, span
+from dominate.tags import nav, a, ol, li, span, p
 from sanic import Sanic
 
 from src.components.material_icons import Icon
@@ -46,13 +46,9 @@ class Breadcrumbs(nav):
 
         for ix, page in enumerate(self.pages):
             if ix == len(self.pages) - 1:
-                with li(class_name=li_class, aria_current="page") as _li:
-                    a(
-                        page.title,
-                        href=self.app.url_for(page.name),
-                        class_name="opacity-60",
-                    )
-                list_items.append(_li)
+                list_items.append(
+                    li(p(page.title), class_name=li_class, aria_current="page")
+                )
             else:
                 with li(class_name=li_class) as _li:
                     with a(

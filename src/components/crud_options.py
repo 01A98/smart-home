@@ -1,4 +1,4 @@
-from dominate.tags import ul, p, button
+from dominate.tags import ul, p, button, a
 
 from src.components.material_icons import Icon
 
@@ -10,7 +10,7 @@ class CrudOptionsMenu(Icon):
         self,
         icon_name: str,
         hx_delete: str,
-        hx_patch: str,
+        edit_page_url: str,
         delete_text: str,
         edit_text: str,
         **kwargs,
@@ -49,14 +49,19 @@ class CrudOptionsMenu(Icon):
                     "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
                     "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
                     "active:bg-opacity-80 active:text-blue-gray-900",
+                    # TODO: make this a component or sth
                     onClick="""event.preventDefault(); 
                            Swal.fire({
                                title: "Zatwierdź usunięcie",
                                icon: "warning",
-                               text: "Czy na pewno chcesz usunąć ten obiekt?",
+                               text: "Czy na pewno chcesz usunąć to urządzenie?",
                                showCancelButton: true,
                                cancelButtonText: "Anuluj",
                                confirmButtonText: "Zatwierdź",
+                               customClass: {
+                                    confirmButton: 'middle none center rounded-md bg-green-500 py-3 px-6 font-sans text-xs font-bold uppercase text-white transition-all active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none',
+                                    cancelButton: 'px-6 py-3 mr-1 font-sans text-xs font-bold text-red-500 uppercase transition-all rounded-md middle none center hover:bg-red-500/10 active:bg-red-500/30 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none',
+                               },
                            })
                            .then((result) => {
                                if(result.isConfirmed){
@@ -74,14 +79,14 @@ class CrudOptionsMenu(Icon):
                         delete_text,
                         class_name="block font-sans text-sm antialiased font-medium leading-normal text-inherit",
                     )
-                with button(
+                with a(
                     role="menuitem",
                     class_name="flex w-full cursor-pointer select-none items-center gap-2 rounded-md px-3 pt-[9px] "
                     "pb-2 text-start leading-tight outline-none transition-all hover:bg-blue-gray-50 "
                     "hover:bg-opacity-80 hover:text-blue-gray-900 focus:bg-blue-gray-50 "
                     "focus:bg-opacity-80 focus:text-blue-gray-900 active:bg-blue-gray-50 "
                     "active:bg-opacity-80 active:text-blue-gray-900",
-                    **{"hx-patch": hx_patch},
+                    href=edit_page_url,
                 ):
                     Icon("edit")
                     p(

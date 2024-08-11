@@ -116,7 +116,7 @@ def bulbs_list(bulbs: list[Bulb], app: Sanic) -> nav:
                     CrudOptionsMenu(
                         "more_horiz",
                         app.url_for("BulbView", id=bulb.id),
-                        "edit",  # TODO:
+                        app.url_for("edit_bulb", bulb_id=bulb.id),
                         "Usuń żarówkę",
                         "Edytuj żarówkę",
                     )

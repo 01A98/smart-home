@@ -1,6 +1,7 @@
 import random
 from dataclasses import dataclass
 
+from dominate import document
 from dominate.tags import section, div
 from sanic import Request, Sanic, html, json, redirect
 from sanic.views import HTTPMethodView
@@ -34,16 +35,39 @@ def create_view(app: Sanic) -> None:
                 del form.room_id
 
             await Bulb.create(**form.data)
-            return redirect(app.url_for("BulbsView"))
-
-        @staticmethod
-        async def delete(request: Request):
-            room_id = request.args.get("id")
-            await Bulb.filter(id=room_id).delete()
             return redirect(
                 app.url_for("BulbsView"),
                 status=204,
                 headers={"HX-Location": app.url_for("BulbsView")},
+            )
+
+        @staticmethod
+        async def patch(request: Request):
+            bulb_id = request.args.get("id")
+            form = BulbForm(request.form)
+            # TODO: move somewhere, figure out imports to avoid circ
+            NO_ROOM_ID = "99999"
+
+            if form.data.get("room_id") == NO_ROOM_ID:
+                form.room_id.data = None
+
+            await Bulb.filter(id=bulb_id).update(**form.data)
+            return redirect(
+                app.url_for("BulbsView"),
+                status=204,
+                headers={"HX-Location": app.url_for("BulbsView")},
+            )
+
+        @staticmethod
+        async def delete(request: Request):
+            bulb_id = request.args.get("id")
+            await Bulb.filter(id=bulb_id).delete()
+            return redirect(
+                app.url_for("BulbsView"),
+                status=204,
+                headers={
+                    "HX-Refresh": "true",
+                },
             )
 
     @serializer(html)
@@ -53,11 +77,33 @@ def create_view(app: Sanic) -> None:
             name="new_bulb",
             title="Nowa Żarówka",
         )
-        rooms = await Room.all()
 
+        rooms = await Room.all()
+        bulb_form = Bulb.get_form({"hx-post": app.url_for("BulbView")}, rooms)
+        view = _get_bulb_view(page, bulb_form)
+
+        return view.render()
+
+    @serializer(html)
+    @atomic()
+    async def edit_bulb(request: Request, bulb_id: int):
+        page = Page(
+            name="edit_bulb",
+            title="Edytuj Żarówkę",
+        )
+
+        rooms = await Room.all()
+        bulb = await Bulb.get(id=bulb_id)
+        bulb_form = Bulb.get_form(
+            {"hx-patch": app.url_for("BulbView", id=bulb.id)}, rooms, bulb
+        )
+        view = _get_bulb_view(page, bulb_form)
+
+        return view.render()
+
+    def _get_bulb_view(page, bulb_form: BulbForm) -> document:
         base_ctx = BaseContext(app=app, current_page=page)
         navbar = base_ctx.app_navbar
-
         page_content = BasePage(
             navbar,
             div(
@@ -67,13 +113,12 @@ def create_view(app: Sanic) -> None:
                 class_name="w-full max-w-screen-xl mx-auto p-2",
             ),
             section(
-                Bulb.get_form(app.url_for("BulbView"), rooms),
+                bulb_form,
                 class_name="block w-full max-w-screen-xl mx-auto",
             ),
             title=page.title,
         )
-
-        return page_content.render()
+        return page_content
 
     # TODO: add option for room view alongside other inputs
     async def pick_random_color(request: Request, id: int):
@@ -95,6 +140,9 @@ def create_view(app: Sanic) -> None:
 
     app.add_route(BulbView.as_view(), "/bulb")
     app.add_route(new_bulb, "bulbs/new", methods=["GET"], name="new_bulb")
+    app.add_route(
+        edit_bulb, "bulbs/edit/<bulb_id:int>", methods=["GET"], name="edit_bulb"
+    )
 
     app.add_route(
         pick_random_color,

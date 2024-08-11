@@ -424,7 +424,7 @@ def room_card(
         CrudOptionsMenu(
             "more_horiz",
             app.url_for("RoomView", id=room.id),
-            "edit",  # TODO:
+            app.url_for("edit_room", room_id=room.id),
             "Usuń pokój",
             "Edytuj pokój",
         )
